@@ -1,13 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from colorfield.fields import ColorField
 
 User = get_user_model()
 
 
-class Tags(models.Model):
+class Tag(models.Model):
     name = models.CharField('Название', unique=True, max_length=256)
-    color =
+    color = ColorField(format='hex')
     slug = models.SlugField(max_length=256)
+
+    class Meta:
+        verbose_name = 'Тег'
+        verbose_name_plural = 'Теги'
+    def __str__(self) -> str:
+        return self.name
 
 
 class Ingredient(models.Model):
@@ -22,19 +29,16 @@ class Ingredient(models.Model):
         return f'{self.name}, {self.unit_of_mesurement}'
 
 
-class Recipes(models.Model):
+class Recipe(models.Model):
     id = models.IntegerField
-    tags = models.ForeignKey(Tags, on_delete=models.CASCADE)
-    name = models.CharField(max_length=256)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    tags = models.ForeignKey(Tag, verbose_name='Теги',
+                             related_name='recipes', on_delete=models.CASCADE)
+    name = models.CharField('Название',max_length=256)
+    author = models.ForeignKey(User, related_name='recipes',
+                               verbose_name='Автор', on_delete=models.CASCADE)
     ingridients = 
-    text = models.CharField
-    image = 
+    text = models.CharField('Описание рецепта', max_length=256)
+    image = models.ImageField('Изображение',
+                             blank=True, null=True, upload_to='static/recipe/')
     cooking_time = models.IntegerField > 1
 
-
-    
-
-
-
-# Create your models here.
