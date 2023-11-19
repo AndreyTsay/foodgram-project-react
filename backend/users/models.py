@@ -1,49 +1,52 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import UniqueConstraint
 
 
-class User(AbstractUser):
+class CustomUser(AbstractUser):
+    email = models.EmailField(
+        db_index=True,
+        max_length=254,
+        unique=True,
+        verbose_name='Почта'
+    )
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = [
-        'username',
-        'first_name',
-        'last_name',
-    ]
-    email = models.EmailField('Email',
-                              max_length=256, unique=True)
-    first_name = models.CharField('Имя', max_length=256)
-    last_name = models.CharField('Фамилия', max_length=256)
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
 
-    class Meta():
+    class Meta:
         verbose_name = 'Пользователь'
         verbose_name_plural = 'Пользователи'
-        oredring = ('id')
 
-    def __str__(self) -> str:
-        return self.email
+    def __str__(self):
+        return self.username
+
+
+User = CustomUser
 
 
 class Subscribe(models.Model):
     user = models.ForeignKey(
         User,
-        related_name='subscriber',
-        verbose_name="Подписчик",
+        verbose_name='Подписчик',
+        related_name='follower',
         on_delete=models.CASCADE,
     )
     author = models.ForeignKey(
         User,
-        related_name='subscribing',
-        verbose_name="Автор",
+        verbose_name='Подписка',
+        related_name='following',
         on_delete=models.CASCADE,
     )
 
     class Meta:
-        ordering = ['-id']
-        constraints = [
-            UniqueConstraint(
-                fields=['user', 'author'], name='unique_subscription')
-        ]
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
+        constraints = [
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='unique_follow',
+            )
+        ]
+
+    def __str__(self):
+        return f'{self.user} follows {self.author}'

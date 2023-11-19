@@ -11,8 +11,8 @@ from rest_framework.fields import IntegerField, SerializerMethodField
 from rest_framework.relations import PrimaryKeyRelatedField
 from rest_framework.serializers import ModelSerializer
 
-from recipes.models import Ingredient, IngredientInRecipe, Recipe, Tag
-from users.models import Subscribe
+from recipes.models import Ingredient, RecipeIngredient, Recipe, Tag
+from users.models import CustomUser, Subscribe
 
 User = get_user_model()
 
@@ -20,8 +20,8 @@ User = get_user_model()
 class CustomUserCreateSerializer(UserCreateSerializer):
     class Meta:
         model = User
-        fields = tuple(User.REQUIRED_FIELDS) + (
-            User.USERNAME_FIELD,
+        fields = tuple(CustomUser.REQUIRED_FIELDS) + (
+            CustomUser.USERNAME_FIELD,
             'password',
         )
 
@@ -126,7 +126,7 @@ class RecipeReadSerializer(ModelSerializer):
             'id',
             'name',
             'measurement_unit',
-            amount=F('ingredientinrecipe__amount')
+            amount=F('RecipeIngredient__amount')
         )
         return ingredients
 
@@ -143,11 +143,11 @@ class RecipeReadSerializer(ModelSerializer):
         return user.shopping_cart.filter(recipe=obj).exists()
 
 
-class IngredientInRecipeWriteSerializer(ModelSerializer):
+class RecipeIngredientWriteSerializer(ModelSerializer):
     id = IntegerField(write_only=True)
 
     class Meta:
-        model = IngredientInRecipe
+        model = RecipeIngredient
         fields = ('id', 'amount')
 
 
@@ -155,7 +155,7 @@ class RecipeWriteSerializer(ModelSerializer):
     tags = PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                   many=True)
     author = CustomUserSerializer(read_only=True)
-    ingredients = IngredientInRecipeWriteSerializer(many=True)
+    ingredients = RecipeIngredientWriteSerializer(many=True)
     image = Base64ImageField()
 
     class Meta:
@@ -205,8 +205,8 @@ class RecipeWriteSerializer(ModelSerializer):
 
     @transaction.atomic
     def create_ingredients_amounts(self, ingredients, recipe):
-        IngredientInRecipe.objects.bulk_create(
-            [IngredientInRecipe(
+        RecipeIngredient.objects.bulk_create(
+            [RecipeIngredient(
                 ingredient=Ingredient.objects.get(id=ingredient['id']),
                 recipe=recipe,
                 amount=ingredient['amount']
