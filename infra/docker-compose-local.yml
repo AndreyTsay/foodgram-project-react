@@ -11,7 +11,7 @@ services:
     restart: always
 
   backend:
-    image: andreytsay/foodgram-backend:latest
+    image: andreytsay/foodgram_backend:latest
     restart: always
     volumes:
       - static_value:/app/static/
@@ -23,7 +23,7 @@ services:
       - ./.env
 
   frontend:
-    image: andreytsay/foodgram-frontend:latest
+    image: andreytsay/foodgram_frontend:latest
     volumes:
       - ../frontend/:/app/result_build/
 
@@ -31,11 +31,8 @@ services:
     image: nginx:1.21.3-alpine
     ports:
       - "80:80"
-      - "443:443"
     volumes:
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./foodgramproject.crt:/etc/nginx/foodgramproject.crt
-      - ./foodgramproject.key:/etc/nginx/foodgramproject.key
+      - ./nginx_local.conf:/etc/nginx/conf.d/default.conf
       - ../frontend/build:/usr/share/nginx/html/
       - static_value:/var/html/static/
       - media_value:/var/html/media/

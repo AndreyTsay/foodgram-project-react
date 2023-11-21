@@ -11,11 +11,13 @@ django-templated-mail==1.1.1
 djangorestframework==3.14.0
 djangorestframework-simplejwt==5.3.0
 djoser==2.2.2
+drf-base64==2.0
 drf-extra-fields==3.7.0
 filetype==1.2.0
 idna==3.4
 oauthlib==3.2.2
 Pillow==10.1.0
+psycopg2==2.9.9
 pycparser==2.21
 PyJWT==2.8.0
 python-dotenv==1.0.0
