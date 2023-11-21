@@ -1,58 +1,137 @@
-
-from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
-from djoser.views import UserViewSet
-from rest_framework import status
+from rest_framework import status, viewsets, permissions
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.authtoken.models import Token
 
-from .models import Subscribe
-from api.pagination import LimitPageNumberPagination
-from api.serializers import CustomUserSerializer, SubscribeSerializer
+from .pagination import UsersPagination, RecipePagination
+from .models import User, Subscription
+from .serializers import (
+    UserRegistrationSerializer,
+    UserInfoSerializer,
+    TokenSerializer,
+    NewPasswordSerializer,
+    UserRecipesSerializer,
+)
 
-User = get_user_model()
 
-
-class CustomUserViewSet(UserViewSet):
+class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для регистрации пользователя, просмотра списка пользователей
+    и просмотра отдельного пользователя."""
     queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
-    pagination_class = LimitPageNumberPagination
+    pagination_class = UsersPagination
 
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[IsAuthenticated]
-    )
-    def subscribe(self, request, **kwargs):
+    def get_permissions(self):
+        if self.action in ['retrieve', 'me', 'subscribe', 'subscriptions']:
+            permission_classes = [permissions.IsAuthenticated]
+        # Но ведь в документации на профиле пользователя по GET-запросу стоит
+        # запрет на доступ неавторизованным пользователям? И 401 ошибка
+        else:
+            permission_classes = [permissions.AllowAny]
+        return [permission() for permission in permission_classes]
+
+    def get_serializer_class(self):
+        if self.action == 'list' or self.request.method == 'GET':
+            return UserInfoSerializer
+        elif self.action in [
+            'subscribe',
+            'subscriptions'
+        ]:
+            return UserRecipesSerializer
+        return UserRegistrationSerializer
+
+    @action(detail=False, url_path='me',
+            permission_classes=(permissions.IsAuthenticated,))
+    def me(self, request):
+        """Метод, позволяющий посмотреть свой профиль."""
+        serializer = UserInfoSerializer(request.user,
+                                        context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(methods=['POST'], detail=False, url_path='set_password',
+            permission_classes=(permissions.IsAuthenticated,))
+    def change_password(self, request):
+        """Метод, позволяющий сменить пароль."""
         user = request.user
-        author_id = self.kwargs.get('id')
-        author = get_object_or_404(User, id=author_id)
+        serializer = NewPasswordSerializer(data=request.data)
+
+        serializer.is_valid(raise_exception=True)
+        if serializer.data['current_password'] == request.user.password:
+            user.password = serializer.data['new_password']
+            user.save(update_fields=["password"])
+            return Response('Пароль успешно изменен.',
+                            status=status.HTTP_204_NO_CONTENT)
+
+        return Response('Неверный текущий пароль.',
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['POST', 'DELETE'], detail=False,
+            url_path=r'(?P<pk>\d+)/subscribe',
+            permission_classes=(permissions.IsAuthenticated,))
+    def subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['pk'])
+        serializer = UserRecipesSerializer(author,
+                                           context={'request': request})
 
         if request.method == 'POST':
-            serializer = SubscribeSerializer(author,
-                                             data=request.data,
-                                             context={"request": request})
-            serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            if Subscription.objects.filter(
+                    user=request.user, author=author).exists():
+                return Response('Вы уже подписаны на этого пользователя.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            elif request.user == author:
+                return Response('Нельзя подписаться на самого себя.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            Subscription.objects.create(user=request.user, author=author)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscribe,
-                                             user=user,
-                                             author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        if not Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            return Response('Вы не подписаны на этого пользователя.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        subscription = Subscription.objects.get(
+            user=request.user, author=author)
+        subscription.delete()
+        return Response(serializer.data,
+                        status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        permission_classes=[IsAuthenticated]
-    )
+    @action(methods=['GET'], detail=False,
+            url_path='subscriptions',
+            permission_classes=(permissions.IsAuthenticated,),
+            pagination_class=RecipePagination)
     def subscriptions(self, request):
-        user = request.user
-        queryset = User.objects.filter(subscribing__user=user)
-        pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(pages,
-                                         many=True,
-                                         context={'request': request})
-        return self.get_paginated_response(serializer.data)
+        authors = User.objects.filter(
+            recipe_author__user=request.user).prefetch_related('recipes')
+        page = self.paginate_queryset(authors)
+
+        if page:
+            serializer = UserRecipesSerializer(
+                page, many=True,
+                context={'request': request})
+
+            return self.get_paginated_response(serializer.data)
+        serializer = UserRecipesSerializer(authors, many=True,
+                                           context={'request': request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomAuthToken(ObtainAuthToken):
+    """Кастомный вью-класс для получения токена по username-email."""
+    permission_classes = (permissions.AllowAny,)
+    pagination_class = None
+
+    def post(self, request, *args, **kwargs):
+        serializer = TokenSerializer(data=request.data,
+                                     context={'request': request})
+
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            email=serializer.data.get('email')
+        )
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'auth_token': token.key,
+        })
