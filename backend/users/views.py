@@ -25,8 +25,6 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['retrieve', 'me', 'subscribe', 'subscriptions']:
             permission_classes = [permissions.IsAuthenticated]
-        # Но ведь в документации на профиле пользователя по GET-запросу стоит
-        # запрет на доступ неавторизованным пользователям? И 401 ошибка
         else:
             permission_classes = [permissions.AllowAny]
         return [permission() for permission in permission_classes]

@@ -17,7 +17,6 @@ from .models import (
 
 class UserInfoSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра профилей пользователей."""
-    # Вынесен из модуля users с целью предотвращения циклического импорта.
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -37,7 +36,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
 class UserShortInfoSerializer(serializers.ModelSerializer):
     """Сериализатор для краткого отображения пользователя на главной странице
     рецептов."""
-    # Вынесен из модуля users с целью предотвращения циклического импорта.
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name')
