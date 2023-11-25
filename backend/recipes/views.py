@@ -1,19 +1,19 @@
-from django_filters.rest_framework import DjangoFilterBackend
-from django.http import HttpResponse
 from django.db.models import F
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status, permissions
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import permissions, status, viewset
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
-from rest_framework.decorators import action
 
-from .models import Tag, Ingredient, Recipe, Favorites, ShoppingCart
+from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
 from .serializers import (
-    TagSerializer,
     IngredientsSerializer,
     RecipeCreationSerializer,
+    RecipeGetSerializer,
     RecipeListSerializer,
-    RecipeGetSerializer
+    TagSerializer
 )
 from .permissions import IsAdminAuthorOrReadOnly
 from .filters import IngredientFilter, RecipeFilter

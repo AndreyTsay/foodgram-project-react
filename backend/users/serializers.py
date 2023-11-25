@@ -1,11 +1,10 @@
 import re
 
 from rest_framework import serializers
-
-from .models import User, Subscription
-from recipes.serializers import RecipeContextSerializer
-
 from djoser.serializers import UserSerializer
+
+from recipes.serializers import RecipeContextSerializer
+from .models import Subscription, User
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):

@@ -5,7 +5,6 @@ from django.conf import settings
 
 from recipes.models import Ingredient
 
-
 DATA = {Ingredient: 'ingredients.csv'}
 
 
