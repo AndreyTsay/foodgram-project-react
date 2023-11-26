@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import status, viewsets, permissions
+from rest_framework import permissions, status, viewsets
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
@@ -13,7 +13,7 @@ from .serializers import (
     UserInfoSerializer,
     UserRecipesSerializer,
     UserRegistrationSerializer
-)
+    )
 
 
 class UserViewSet(viewsets.ModelViewSet):

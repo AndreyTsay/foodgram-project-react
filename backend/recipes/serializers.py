@@ -12,7 +12,7 @@ from .models import (
     Recipe,
     ShoppingCart,
     Tag
-)
+    )
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
