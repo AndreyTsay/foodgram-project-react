@@ -16,7 +16,7 @@ from .serializers import (
     RecipeGetSerializer,
     RecipeListSerializer,
     TagSerializer
-    )
+)
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):

@@ -13,7 +13,7 @@ from .serializers import (
     UserInfoSerializer,
     UserRecipesSerializer,
     UserRegistrationSerializer
-    )
+)
 
 
 class UserViewSet(viewsets.ModelViewSet):
