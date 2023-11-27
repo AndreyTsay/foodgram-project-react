@@ -15,7 +15,7 @@ ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split
 
 CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(', ')  # Пробуем под .env
+CSRF_TRUSTED_ORIGINS: list [str] = ['http://130.193.41.14', 'https://buyhelperyaproject.ddns.net', 'https://*.ddns.net']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
