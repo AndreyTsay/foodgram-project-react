@@ -98,6 +98,7 @@ class IngredientForRecipeSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Укажите корректное количество ингредиентов.'
             )
+        return value
 
 
 class RecipeGetSerializer(serializers.ModelSerializer):
@@ -153,11 +154,19 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'name', 'tags', 'ingredients',
                   'cooking_time', 'text', 'image')
 
+    def validate_name(self, value):
+        if len(value) > 200:
+            raise serializers.ValidationError(
+                'Имя рецепта не может быть более 200 символов.'
+            )
+        return value
+
     def validate_cooking_time(self, value):
         if value <= 0:
             raise serializers.ValidationError(
                 'Укажите корректное время приготовления.'
             )
+        return value
 
     def validate(self, data):
         """Валидация создания рецепта - проверяет наличие
@@ -170,7 +179,11 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
             )
         for ingredient in ingredients:
 
-            value = get_object_or_404(Ingredient, id=ingredient['id'])
+            value = Ingredient.objects.filter(id=ingredient['id'])
+            if not value.exists():
+                raise serializers.ValidationError(
+                    {'Ошибка': 'Такого ингредиента не существует.'}
+                )
             if int(ingredient['amount']) < 1:
                 raise serializers.ValidationError(
                     'Укажите корректное количество ингредиентов.'
@@ -186,6 +199,14 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Необходимо указать хотя бы один тег."
             )
+        tags_list = []
+        for tag in tags:
+
+            if tag in tags_list:
+                raise serializers.ValidationError(
+                    'Теги не должны повторяться.'
+                )
+            tags_list.append(tag)
 
         image = self.initial_data.get('image')
         if not image:
