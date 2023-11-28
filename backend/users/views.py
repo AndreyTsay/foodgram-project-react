@@ -5,8 +5,10 @@ from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from recipes.pagination import RecipePagination
+
 from .models import User, Subscription
-from .pagination import UsersPagination, RecipePagination
+from .pagination import UsersPagination
 from .serializers import (
     NewPasswordSerializer,
     TokenSerializer,
