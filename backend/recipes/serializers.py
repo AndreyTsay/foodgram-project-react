@@ -3,7 +3,9 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from users import constants
 from users.models import Subscription, User
+
 from .models import (
     Favorites,
     Ingredient,
@@ -12,6 +14,7 @@ from .models import (
     ShoppingCart,
     Tag
 )
+from .utils import bulk_create_ingredients_for_recipe
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -93,7 +96,7 @@ class IngredientForRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
     def validate_amount(self, value):
-        if value < 1:
+        if value < constants.MIN_VALUE:
             raise serializers.ValidationError(
                 'Укажите корректное количество ингредиентов.'
             )
@@ -154,14 +157,14 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
                   'cooking_time', 'text', 'image')
 
     def validate_name(self, value):
-        if len(value) > 200:
+        if len(value) > constants.MAX_LENGTH_200:
             raise serializers.ValidationError(
                 'Имя рецепта не может быть более 200 символов.'
             )
         return value
 
     def validate_cooking_time(self, value):
-        if value <= 0:
+        if value < constants.MIN_VALUE or value > constants.MAX_VALUE:
             raise serializers.ValidationError(
                 'Укажите корректное время приготовления.'
             )
@@ -215,17 +218,13 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        ingredients = validated_data.pop('ingredient_for_recipe')
-        tags = validated_data.pop('tags')
-        recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
+        ingredients_data = validated_data.pop('ingredient_for_recipe')
+        tags_data = validated_data.pop('tags')
 
-        for ingredient in ingredients:
-            IngredientsForRecipe.objects.create(
-                ingredient_id=ingredient.get('id'),
-                recipe=recipe,
-                amount=ingredient.get('amount')
-            )
+        recipe = Recipe.objects.create(**validated_data)
+        recipe.tags.set(tags_data)
+
+        bulk_create_ingredients_for_recipe(recipe, ingredients_data)
 
         return recipe
 
@@ -240,18 +239,15 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
             instance.text
         )
         instance.image = validated_data.get('image', instance.image)
-        ingredients = validated_data.pop('ingredient_for_recipe')
-        tags = validated_data.pop('tags')
-        instance.tags.clear()
-        instance.tags.set(tags)
-        instance.ingredients.clear()
+        ingredients_data = validated_data.pop('ingredient_for_recipe')
+        tags_data = validated_data.pop('tags')
 
-        for ingredient in ingredients:
-            IngredientsForRecipe.objects.create(
-                ingredient_id=ingredient.get('id'),
-                recipe=instance,
-                amount=ingredient.get('amount')
-            )
+        instance.tags.clear()
+        instance.tags.set(tags_data)
+        instance.ingredients.clear()
+        
+        bulk_create_ingredients_for_recipe(instance, ingredients_data)
+
         instance.save()
 
         return instance
