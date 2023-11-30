@@ -49,7 +49,7 @@ class Subscription(models.Model):
         constraints = [
             models.UniqueConstraint(fields=['user', 'author'],
                                     name='unique_subscription'),
-            models.CheckConstraint(check=~Q(user=F('author')),
+            models.CheckConstraint(check=~models.Q(user=models.F('author')),
                                    name='no_self_subscription')
         ]
 
