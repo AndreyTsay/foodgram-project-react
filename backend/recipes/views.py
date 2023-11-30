@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
-from .permissions import IsAdminAuthorOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .serializers import (
     IngredientsSerializer,
     RecipeCreationSerializer,
@@ -24,13 +24,13 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     pagination_class = None
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdminOrReadOnly,)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Вьюсет для просмотра ингредиентов."""
     queryset = Ingredient.objects.all()
-    permission_classes = (permissions.AllowAny,)
+    permission_classes = (IsAdminOrReadOnly,)
     serializer_class = IngredientsSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientFilter
@@ -47,7 +47,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         if self.request.method == 'PATCH' or self.action == 'destroy':
-            permission_classes = [IsAdminAuthorOrReadOnly]
+            permission_classes = [IsOwnerOrReadOnly]
         elif self.action in ['list', 'retrieve']:
             permission_classes = [permissions.AllowAny]
         else:
