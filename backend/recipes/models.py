@@ -101,23 +101,17 @@ class AbstractList(models.Model):
     """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
+        related_name="%(app_label)s_%(class)s_related",
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
+        related_name="%(app_label)s_%(class)s_related",
         on_delete=models.CASCADE
     )
 
     class Meta:
         abstract = True
-
-    def __str__(self):
-        return self.name
-
-    @property
-    def default_related_name(self):
-        """Return the default related name for the model."""
-        return "%s_set" % self._meta.model_name
 
 
 class Favorites(AbstractList):
