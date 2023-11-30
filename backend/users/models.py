@@ -1,37 +1,33 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.db.models import F, Q
 from django.utils.translation import gettext_lazy as _
+
+from users import constants
 
 
 class User(AbstractUser):
     """Кастомная модель пользователя."""
     email = models.EmailField(
         _('email address'),
-        max_length=254,
+        max_length=constants.MAX_LENGTH_254,
         unique=True,
         null=False
     )
     first_name = models.CharField(
         _('first name'),
-        max_length=150
+        max_length=constants.MAX_LENGTH_150
     )
     last_name = models.CharField(
         _('last name'),
-        max_length=150
+        max_length=constants.MAX_LENGTH_150
     )
-    password = models.CharField(max_length=150)
+    password = models.CharField(max_length=constants.MAX_LENGTH_150)
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_user'
-            ),
-        ]
+        ordering = ['-email']
 
-    def __str__(self):
-        return self.username
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
 
 
 class Subscription(models.Model):
