@@ -97,18 +97,25 @@ class IngredientsForRecipe(models.Model):
         return f'{self.recipe}: {self.ingredient}'
 
 
-class Favorites(models.Model):
-    """Модель для добавления рецепта в избранное."""
+class AbstractList(models.Model):
+    """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
-        related_name='favorite_recipe',
+        related_name="%(app_label)s_%(class)s_related",
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name='favorite_recipe',
+        related_name="%(app_label)s_%(class)s_related",
         on_delete=models.CASCADE
     )
+
+    class Meta:
+        abstract = True
+
+
+class Favorites(AbstractList):
+    """Модель для добавления рецепта в избранное."""
 
     class Meta:
         constraints = [
@@ -122,18 +129,8 @@ class Favorites(models.Model):
         return f'Рецепт {self.recipe.name} в избранном у {self.user.username}'
 
 
-class ShoppingCart(models.Model):
+class ShoppingCart(AbstractList):
     """Модель для списка покупок."""
-    user = models.ForeignKey(
-        User,
-        related_name='shopping_cart',
-        on_delete=models.CASCADE
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        related_name='shopping_cart',
-        on_delete=models.CASCADE
-    )
 
     class Meta:
         constraints = [
@@ -145,4 +142,4 @@ class ShoppingCart(models.Model):
 
     def __str__(self):
         return (f'Рецепт {self.recipe.name} в списке покупок'
-                f'у {self.user.username}')
+                f' у {self.user.username}')
