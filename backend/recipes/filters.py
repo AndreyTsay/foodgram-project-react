@@ -29,19 +29,15 @@ class RecipeFilter(rest_framework.FilterSet):
     )
 
     def filter_is_favorited(self, queryset, name, value):
-        if self.request.user.is_anonymous:
-            return Recipe.objects.none()
-        if bool(value):
-            return queryset.filter(
-                favorite_recipe__user=self.request.user)
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(recipes_favorites_related__user=user)
         return queryset
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
-        if self.request.user.is_anonymous:
-            return Recipe.objects.none()
-        if bool(value):
-            return queryset.filter(
-                shopping_cart__user=self.request.user)
+        user = self.request.user
+        if value and user.is_authenticated:
+            return queryset.filter(recipes_shoppingcart_related__user=user)
         return queryset
 
     class Meta:
