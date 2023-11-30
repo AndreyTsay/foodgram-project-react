@@ -245,7 +245,6 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
         instance.tags.clear()
         instance.tags.set(tags_data)
         instance.ingredients.clear()
-        
         bulk_create_ingredients_for_recipe(instance, ingredients_data)
 
         instance.save()
