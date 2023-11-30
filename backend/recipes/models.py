@@ -80,8 +80,8 @@ class IngredientsForRecipe(models.Model):
         on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField(
         validators=(MinValueValidator(
-                constants.MIN_VALUE,
-                message='Минимальное количество ингридиентов 1'),),
+                    constants.MIN_VALUE,
+                    message='Минимальное количество ингридиентов 1'),),
         verbose_name='Количество',
     )
 
@@ -98,7 +98,7 @@ class IngredientsForRecipe(models.Model):
 
 
 class AbstractList(models.Model):
-    """Абстрактная модель для избранного и списка покупок."""   
+    """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE
