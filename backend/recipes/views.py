@@ -96,12 +96,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=[permissions.IsAuthenticated,])
     def shopping_cart(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-
-        if ShoppingCart.objects.filter(
-                recipes_shoppingcart_related__recipe=recipe).exists():
-            return Response(
-                {'detail': 'Этот рецепт уже в списке покупок.'},
-                status=status.HTTP_400_BAD_REQUEST)
+        if request.method == 'POST':
+            if ShoppingCart.objects.filter(
+                user=request.user, recipe=recipe).exists():
+                return Response(
+                    {'detail': 'Этот рецепт уже в списке покупок.'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
         ShoppingCart.objects.create(request.user, recipe=recipe)
         serializer = RecipeListSerializer(recipe, context={'request': request})
