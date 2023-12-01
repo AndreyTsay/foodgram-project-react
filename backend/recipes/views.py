@@ -104,11 +104,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     {'detail': 'Этот рецепт уже в списке покупок.'},
                     status=status.HTTP_400_BAD_REQUEST)
             ShoppingCart.objects.create(user=request.user, recipe=recipe)
-            serializer = RecipeListSerializer(recipe, context={'request': request})
+            serializer = RecipeListSerializer(
+                recipe, context={'request': request})
             return Response(
                 {'detail': 'Рецепт успешно добавлен в список покупок.',
                  'recipe': serializer.data},
-                status=status.HTTP_201_CREATED) 
+                status=status.HTTP_201_CREATED)
         if not ShoppingCart.objects.filter(
                 user=request.user, recipe=recipe).exists():
             return Response(
