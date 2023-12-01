@@ -9,7 +9,7 @@ from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
-from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly, AuthUserDelete
+from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
 from .serializers import (
     IngredientsSerializer,
     RecipeCreationSerializer,
