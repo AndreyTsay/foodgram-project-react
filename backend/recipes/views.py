@@ -93,7 +93,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'],
             url_path=r'(?P<pk>\d+)/shopping_cart',
-            permission_classes=[AuthUserDelete])
+            permission_classes=[permissions.IsAuthenticated,])
     def shopping_cart(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         user = request.user
