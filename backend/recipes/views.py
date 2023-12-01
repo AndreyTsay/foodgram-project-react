@@ -1,5 +1,6 @@
 from django.db.models import F
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -91,9 +92,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
                         status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['POST'],
-            url_path='shopping_cart', permission_classes=[AuthUserDelete])
+            url_path=r'(?P<pk>\d+)/shopping_cart',
+            permission_classes=[AuthUserDelete])
     def shopping_cart(self, request, pk=None):
-        recipe = self.get_object()
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         user = request.user
 
         if user.shopping_cart.filter(recipe=recipe).exists():
