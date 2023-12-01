@@ -92,7 +92,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['POST'],
             url_path='shopping_cart', permission_classes=[AuthUserDelete])
-    def add_to_shopping_cart(self, request, pk=None):
+    def shopping_cart(self, request, pk=None):
         recipe = self.get_object()
         user = request.user
 
@@ -108,7 +108,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
              'recipe': serializer.data},
             status=status.HTTP_201_CREATED)
 
-    @add_to_shopping_cart.mapping.delete
+    @shopping_cart.mapping.delete
     def delete_from_shopping_cart(self, request, *args, **kwargs):
         recipe = self.get_object()
         user = request.user
@@ -120,15 +120,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST)
 
         objects.delete()
-        serializer = RecipeListSerializer(recipe, context={'request': request})
-        return Response(
-            {'detail': 'Рецепт успешно удален из списка покупок.',
-             'recipe': serializer.data},
-            status=status.HTTP_204_NO_CONTENT)
-
-        shopping_cart = ShoppingCart.objects.get(
-            user=request.user, recipe=recipe)
-        shopping_cart.delete()
         serializer = RecipeListSerializer(recipe, context={'request': request})
         return Response(
             {'detail': 'Рецепт успешно удален из списка покупок.',
