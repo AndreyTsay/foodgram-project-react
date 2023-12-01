@@ -96,39 +96,38 @@ class RecipeViewSet(viewsets.ModelViewSet):
             permission_classes=[permissions.IsAuthenticated,])
     def shopping_cart(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-        user = request.user
 
-        if user.ShoppingCart.objects.filter(
+        if ShoppingCart.objects.filter(
                 recipes_shoppingcart_related__recipe=recipe).exists():
             return Response(
                 {'detail': 'Этот рецепт уже в списке покупок.'},
                 status=status.HTTP_400_BAD_REQUEST)
 
-        ShoppingCart.objects.create(user=user, recipe=recipe)
+        ShoppingCart.objects.create(request.user, recipe=recipe)
         serializer = RecipeListSerializer(recipe, context={'request': request})
         return Response(
             {'detail': 'Рецепт успешно добавлен в список покупок.',
              'recipe': serializer.data},
             status=status.HTTP_201_CREATED)
 
-    @shopping_cart.mapping.delete
-    def delete_from_shopping_cart(self, request, *args, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-        user = request.user
-        objects = user.ShoppingCart.objects.filter(
-            recipes_shoppingcart_related__recipe=recipe)
+    # @shopping_cart.mapping.delete
+    # def delete_from_shopping_cart(self, request, *args, **kwargs):
+    #     recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+    #     user = request.user
+    #     objects = user.ShoppingCart.objects.filter(
+    #         recipes_shoppingcart_related__recipe=recipe)
 
-        if not objects.exists():
-            return Response(
-                {'detail': 'Этот рецепт не в списке покупок.'},
-                status=status.HTTP_400_BAD_REQUEST)
+    #     if not objects.exists():
+    #         return Response(
+    #             {'detail': 'Этот рецепт не в списке покупок.'},
+    #             status=status.HTTP_400_BAD_REQUEST)
 
-        objects.delete()
-        serializer = RecipeListSerializer(recipe, context={'request': request})
-        return Response(
-            {'detail': 'Рецепт успешно удален из списка покупок.',
-             'recipe': serializer.data},
-            status=status.HTTP_204_NO_CONTENT)
+    #     objects.delete()
+    #     serializer = RecipeListSerializer(recipe, context={'request': request})
+    #     return Response(
+    #         {'detail': 'Рецепт успешно удален из списка покупок.',
+    #          'recipe': serializer.data},
+    #         status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
             url_path='download_shopping_cart',
