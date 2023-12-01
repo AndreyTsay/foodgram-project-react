@@ -123,7 +123,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 {'detail': 'Рецепт успешно добавлен в список покупок.',
                  'recipe': serializer.data},
                 status=status.HTTP_201_CREATED)
-    
+
     @shopping_cart.mapping.delete
     def del_from_shop_cart(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
