@@ -91,9 +91,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
         return Response(data=self.get_serializer(recipe).data,
                         status=status.HTTP_204_NO_CONTENT)
 
-    @action(detail=True, methods=['POST'],
+    @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/shopping_cart',
-            permission_classes=[permissions.IsAuthenticated,])
+            permission_classes=(permissions.IsAuthenticated,))
     def shopping_cart(self, request, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         if request.method == 'POST':
