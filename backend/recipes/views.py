@@ -98,7 +98,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         user = request.user
 
-        if user.shopping_cart.filter(
+        if user.ShoppingCart.objects.filter(
                 recipes_shoppingcart_related__recipe=recipe).exists():
             return Response(
                 {'detail': 'Этот рецепт уже в списке покупок.'},
@@ -115,7 +115,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def delete_from_shopping_cart(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         user = request.user
-        objects = user.shopping_cart.filter(
+        objects = user.ShoppingCart.objects.filter(
             recipes_shoppingcart_related__recipe=recipe)
 
         if not objects.exists():
