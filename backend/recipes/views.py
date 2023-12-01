@@ -1,6 +1,5 @@
 from django.db.models import F
 from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -9,7 +8,7 @@ from rest_framework.response import Response
 
 from .filters import IngredientFilter, RecipeFilter
 from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
-from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly
+from .permissions import IsAdminOrReadOnly, IsOwnerOrReadOnly, AuthUserDelete
 from .serializers import (
     IngredientsSerializer,
     RecipeCreationSerializer,
