@@ -70,39 +70,26 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/favorite',
             permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        recipe = Recipe.objects.get(id=kwargs['pk'])
 
-        if Favorites.objects.filter(
-                user=request.user, recipe=recipe).exists():
-            return Response(
-                {'detail': 'Этот рецепт уже в списке избранного.'},
-                status=status.HTTP_400_BAD_REQUEST)
-
-        Favorites.objects.create(user=request.user, recipe=recipe)
-        serializer = RecipeListSerializer(recipe, context={'request': request})
-        return Response(
-            {'detail': 'Рецепт успешно добавлен в избранное.',
-             'recipe': serializer.data},
-            status=status.HTTP_201_CREATED)
-
-    @favorite.mapping.delete
-    def del_from_favorite(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        if request.method == 'POST':
+            if Favorites.objects.filter(
+                    user=request.user, recipe=recipe).exists():
+                return Response('Этот рецепт уже в списке избранного.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            Favorites.objects.create(user=request.user, recipe=recipe)
+            return Response(data=self.get_serializer(recipe).data,
+                            status=status.HTTP_201_CREATED)
 
         if not Favorites.objects.filter(
                 user=request.user, recipe=recipe).exists():
-            return Response(
-                {'detail': 'Этот рецепт еще не в списке избранного.'},
-                status=status.HTTP_400_BAD_REQUEST)
-
+            return Response('Этот рецепт еще не в списке избранного.',
+                            status=status.HTTP_400_BAD_REQUEST)
         favorite = Favorites.objects.get(
             user=request.user, recipe=recipe)
         favorite.delete()
-        serializer = RecipeListSerializer(recipe, context={'request': request})
-        return Response(
-            {'detail': 'Рецепт успешно удален из избранного.',
-             'recipe': serializer.data},
-            status=status.HTTP_204_NO_CONTENT)
+        return Response(data=self.get_serializer(recipe).data,
+                        status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['POST', 'DELETE'], detail=False,
             url_path=r'(?P<pk>\d+)/shopping_cart',
@@ -123,11 +110,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
                 {'detail': 'Рецепт успешно добавлен в список покупок.',
                  'recipe': serializer.data},
                 status=status.HTTP_201_CREATED)
-
-    @shopping_cart.mapping.delete
-    def del_from_shop_cart(self, request, **kwargs):
-        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-
         if not ShoppingCart.objects.filter(
                 user=request.user, recipe=recipe).exists():
             return Response(
