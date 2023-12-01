@@ -123,7 +123,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
     #             status=status.HTTP_400_BAD_REQUEST)
 
     #     objects.delete()
-    #     serializer = RecipeListSerializer(recipe, context={'request': request})
+    #     serializer = RecipeListSerializer(
+    # recipe, context={'request': request})
     #     return Response(
     #         {'detail': 'Рецепт успешно удален из списка покупок.',
     #          'recipe': serializer.data},
