@@ -105,17 +105,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
             ShoppingCart.objects.create(user=request.user, recipe=recipe)
             return Response(data=self.get_serializer(recipe).data,
                             status=status.HTTP_201_CREATED)
-
+            
         if not ShoppingCart.objects.filter(
                 user=request.user, recipe=recipe).exists():
             return Response(
-                'Вы не добавляли этот рецепт в список покупок.',
+                {'detail': 'Вы не добавляли этот рецепт в список покупок.'},
                 status=status.HTTP_400_BAD_REQUEST)
+
         shopping_cart = ShoppingCart.objects.get(
             user=request.user, recipe=recipe)
         shopping_cart.delete()
-        return Response(data=self.get_serializer(recipe).data,
-                        status=status.HTTP_204_NO_CONTENT)
+        serializer = RecipeListSerializer(recipe, context={'request': request})
+        return Response(
+            {'detail': 'Рецепт успешно удален из списка покупок.',
+             'recipe': serializer.data},
+            status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
             url_path='download_shopping_cart',
