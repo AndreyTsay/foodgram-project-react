@@ -9,19 +9,19 @@ class User(AbstractUser):
     """Кастомная модель пользователя."""
     email = models.EmailField(
         _('email address'),
-        max_length=constants.MAX_LENGTH_254,
+        max_length=constants.MAX_EMAIL_LENGTH,
         unique=True,
         null=False
     )
     first_name = models.CharField(
         _('first name'),
-        max_length=constants.MAX_LENGTH_150
+        max_length=constants.MAX_FIRST_NAME_LENGTH
     )
     last_name = models.CharField(
         _('last name'),
-        max_length=constants.MAX_LENGTH_150
+        max_length=constants.MAX_LAST_NAME_LENGTH
     )
-    password = models.CharField(max_length=constants.MAX_LENGTH_150)
+    password = models.CharField(max_length=constants.MAX_LENGTH_PASSWORD)
 
     class Meta:
         ordering = ['-email']

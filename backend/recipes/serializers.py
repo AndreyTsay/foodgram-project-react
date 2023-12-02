@@ -161,14 +161,15 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
                   'cooking_time', 'text', 'image')
 
     def validate_name(self, value):
-        if len(value) > constants.MAX_LENGTH_200:
+        if len(value) > constants.MAX_RECIPE_NAME_LENGTH:
             raise serializers.ValidationError(
-                'Имя рецепта не может быть более 200 символов.'
+                'Имя рецепта не может быть более 254 символов.'
             )
         return value
 
     def validate_cooking_time(self, value):
-        if value < constants.MIN_VALUE or value > constants.MAX_VALUE:
+        if value < constants.COOKING_TIME_MIN_VALUE or (
+                value > constants.COOKING_TIME_MAX_VALUE):
             raise serializers.ValidationError(
                 'Укажите корректное время приготовления.'
             )

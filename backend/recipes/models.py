@@ -43,7 +43,7 @@ class Recipe(models.Model):
         related_name='recipes',
         on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=constants.MAX_LENGTH_254)
+    name = models.CharField(max_length=constants.MAX_RECIPE_NAME_LENGTH)
     image = models.ImageField(
         upload_to='recipes/images/',
         default=None
@@ -56,8 +56,8 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(Tag, related_name='recipe_tag')
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(constants.MIN_VALUE),
-                    MaxValueValidator(constants.MAX_VALUE)]
+        validators=[MinValueValidator(constants.COOKING_TIME_MIN_VALUE),
+                    MaxValueValidator(constants.COOKING_TIME_MAX_VALUE)]
     )
 
     class Meta:
@@ -80,7 +80,7 @@ class IngredientsForRecipe(models.Model):
         on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField(
         validators=(MinValueValidator(
-                    constants.MIN_VALUE,
+                    constants.AMOUNT_MIN_VALUE,
                     message='Минимальное количество ингридиентов 1'),),
         verbose_name='Количество',
     )
