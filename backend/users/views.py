@@ -66,16 +66,15 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST'], detail=False,
+    @action(methods=['POST', 'DELETE'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(
-            author, context={'request': request})
-
+        serializer = UserRecipesSerializer(author,
+                                           context={'request': request})
         if request.method == 'POST':
-            if serializer:
+            if serializer.data['is_subscribed']:
                 return Response('Вы уже подписаны на этого пользователя.',
                                 status=status.HTTP_400_BAD_REQUEST)
             elif request.user == author:
@@ -83,23 +82,15 @@ class UserViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_400_BAD_REQUEST)
 
             Subscription.objects.create(user=request.user, author=author)
-            serializer.data['is_subscribed'] = True
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @subscribe.mapping.delete
-    def delete_subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(
-            author, context={'request': request})
-
-        if not serializer:
+        if not serializer.data['is_subscribed']:
             return Response('Вы не подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
 
-        subscription = Subscription.objects.get(
-            user=request.user, author=author)
+        subscription = Subscription.objects.get(user=request.user,
+                                                author=author)
         subscription.delete()
-        serializer.data['is_subscribed'] = False
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
