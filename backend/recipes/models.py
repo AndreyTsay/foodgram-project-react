@@ -8,10 +8,11 @@ from users.models import User
 
 class Tag(models.Model):
     """Модель тегов."""
-    name = models.CharField(max_length=50, unique=True)
-    color = ColorField(max_length=7, unique=True)
+    name = models.CharField(
+        max_length=constants.TAG_NAME_LENGHT, unique=True)
+    color = ColorField(max_length=constants.TAG_COLOR_LENGHT, unique=True)
     slug = models.SlugField(
-        max_length=constants.MAX_LENGTH_124,
+        max_length=constants.TAG_SLUG_LENGHT,
         unique=True,
     )
 
@@ -21,8 +22,9 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""
-    name = models.CharField(max_length=constants.MAX_LENGTH_124)
-    measurement_unit = models.CharField(max_length=constants.MAX_LENGTH_10)
+    name = models.CharField(max_length=constants.INGREDIENT_NAME_LENGTH)
+    measurement_unit = models.CharField(
+        max_length=constants.INGREDIENT_MEASUREMENT_LENGTH)
 
     class Meta:
         constraints = [
