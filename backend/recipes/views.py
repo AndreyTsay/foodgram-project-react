@@ -66,7 +66,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(methods=['POST', 'DELETE'], detail=False,
+    @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/favorite',
             permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, **kwargs):
@@ -81,6 +81,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(data=self.get_serializer(recipe).data,
                             status=status.HTTP_201_CREATED)
 
+    @favorite.mapping.delete
+    def delete_from_favorite(self, request, **kwargs):
+        recipe = Recipe.objects.get(id=kwargs['pk'])
         if not Favorites.objects.filter(
                 user=request.user, recipe=recipe).exists():
             return Response('Этот рецепт еще не в списке избранного.',
