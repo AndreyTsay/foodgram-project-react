@@ -75,7 +75,7 @@ class UserViewSet(viewsets.ModelViewSet):
             author, context={'request': request})
 
         if request.method == 'POST':
-            if serializer.data['is_subscribed']:
+            if serializer:
                 return Response('Вы уже подписаны на этого пользователя.',
                                 status=status.HTTP_400_BAD_REQUEST)
             elif request.user == author:
@@ -92,7 +92,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserRecipesSerializer(
             author, context={'request': request})
 
-        if not serializer.data['is_subscribed']:
+        if not serializer:
             return Response('Вы не подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
 
