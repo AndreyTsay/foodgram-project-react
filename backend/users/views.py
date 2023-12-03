@@ -73,25 +73,27 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
+
         if request.method == 'POST':
-            if serializer.data['is_subscribed']:
+            if Subscription.objects.filter(
+                    user=request.user, author=author).exists():
                 return Response('Вы уже подписаны на этого пользователя.',
                                 status=status.HTTP_400_BAD_REQUEST)
             elif request.user == author:
                 return Response('Нельзя подписаться на самого себя.',
                                 status=status.HTTP_400_BAD_REQUEST)
-
             Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
-        if not serializer.data['is_subscribed']:
+        subscription = Subscription.objects.filter(
+            user=request.user, author=author).first()
+        if not subscription:
             return Response('Вы не подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
-
-        subscription = Subscription.objects.get(user=request.user,
-                                                author=author)
         subscription.delete()
-        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
+        return Response(serializer.data,
+                        status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',

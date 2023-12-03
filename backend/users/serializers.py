@@ -105,9 +105,11 @@ class UserRecipesSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request and request.user.is_authenticated:
-            return obj.subscribers.filter(id=request.user.id).exists()
-        return False
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()

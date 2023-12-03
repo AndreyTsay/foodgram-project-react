@@ -80,7 +80,6 @@ class RecipeViewSet(viewsets.ModelViewSet):
             Favorites.objects.create(user=request.user, recipe=recipe)
             return Response(data=self.get_serializer(recipe).data,
                             status=status.HTTP_201_CREATED)
-
         if not Favorites.objects.filter(
                 user=request.user, recipe=recipe).exists():
             return Response('Этот рецепт еще не в списке избранного.',
