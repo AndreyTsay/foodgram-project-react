@@ -84,7 +84,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def del_favorite(self, request, **kwargs):
         recipe = Recipe.objects.get(id=kwargs['pk'])
         favorite = Favorites.objects.get(
-            user=request.user, recipe=recipe).first()
+            user=request.user, recipe=recipe).exists()
         if not favorite:
             return Response('Этот рецепт еще не в списке избранного.',
                             status=status.HTTP_400_BAD_REQUEST)
