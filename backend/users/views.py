@@ -75,7 +75,7 @@ class UserViewSet(viewsets.ModelViewSet):
                                            context={'request': request})
 
         if Subscription.objects.filter(
-                        user=request.user, author=author).exists():
+                user=request.user, author=author).exists():
             return Response('Вы уже подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
         elif request.user == author:
@@ -89,7 +89,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
-                                           context={'request': request})   
+                                           context={'request': request})
         subscription = Subscription.objects.filter(
             user=request.user, author=author).first()
         if not subscription:
