@@ -111,7 +111,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     @shopping_cart.mapping.delete
     def delete_from_shopping_cart(self, request, *args, **kwargs):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
-        shopping_cart = ShoppingCart.objects.get(
+        shopping_cart = ShoppingCart.objects.filter(
             user=request.user, recipe=recipe).first()
         if not shopping_cart:
             return Response(
