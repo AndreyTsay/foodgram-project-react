@@ -108,7 +108,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         recipe = get_object_or_404(Recipe, id=kwargs['pk'])
         shopping_cart = ShoppingCart.objects.filter(
             user=request.user, recipe=recipe).first()
-        if not shopping_cart.exists():
+        if not shopping_cart:
             return Response({
                 'error': 'Вы не добавляли этот рецепт в список покупок.'},
                 status=status.HTTP_400_BAD_REQUEST
