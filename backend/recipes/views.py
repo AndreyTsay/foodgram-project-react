@@ -70,7 +70,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/favorite',
             permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, **kwargs):
-        recipe = Recipe.objects.get(id=kwargs['pk'])
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
 
         if Favorites.objects.filter(
                 user=request.user, recipe=recipe).exists():
@@ -82,10 +82,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     @favorite.mapping.delete
     def del_favorite(self, request, **kwargs):
-        recipe = Recipe.objects.get(id=kwargs['pk'])
-        favorite = Favorites.objects.get(
-            user=request.user, recipe=recipe)
-        if not favorite.exists():
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        favorite = Favorites.objects.filter(
+            user=request.user, recipe=recipe).first()
+        if not favorite:
             return Response('Этот рецепт еще не в списке избранного.',
                             status=status.HTTP_400_BAD_REQUEST)
         favorite.delete()
