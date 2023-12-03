@@ -77,8 +77,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response('Этот рецепт уже в списке избранного.',
                             status=status.HTTP_400_BAD_REQUEST)
         Favorites.objects.create(user=request.user, recipe=recipe)
-        return Response(data=self.get_serializer(recipe).data,
-                        status=status.HTTP_201_CREATED)
+        serializer = RecipeListSerializer(recipe, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @favorite.mapping.delete
     def del_favorite(self, request, **kwargs):
@@ -89,8 +89,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response('Этот рецепт еще не в списке избранного.',
                             status=status.HTTP_400_BAD_REQUEST)
         favorite.delete()
-        return Response(data=self.get_serializer(recipe).data,
-                        status=status.HTTP_204_NO_CONTENT)
+        serializer = RecipeListSerializer(recipe, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/shopping_cart',
