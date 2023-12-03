@@ -103,20 +103,18 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeListSerializer(recipe, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # @shopping_cart.mapping.delete
-    # def del_from_shopping_cart(self, request, *args, **kwargs):
-    #     id_recipe = kwargs.get('pk')
-    #     user = request.user
-    #     recipe = Recipe.objects.get(id=id_recipe)
-    #     objects = user.recipes_ShoppingCart_recipes_related.filter(
-    # item=recipe)
-    #     if not objects.exists():
-    #         return Response({
-    #             'error': 'Вы не добавляли этот рецепт в список покупок.'},
-    #             status=status.HTTP_400_BAD_REQUEST
-    #         )
-    #     objects.delete()
-    #     return Response(status=status.HTTP_204_NO_CONTENT)
+    @shopping_cart.mapping.delete
+    def del_from_shopping_cart(self, request, *args, **kwargs):
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        shopping_cart = ShoppingCart.objects.filter(
+            user=request.user, recipe=recipe).first()
+        if not shopping_cart.exists():
+            return Response({
+                'error': 'Вы не добавляли этот рецепт в список покупок.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        shopping_cart.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
             url_path='download_shopping_cart',
