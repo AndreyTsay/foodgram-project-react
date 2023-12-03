@@ -72,20 +72,22 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def favorite(self, request, **kwargs):
         recipe = Recipe.objects.get(id=kwargs['pk'])
 
-        if request.method == 'POST':
-            if Favorites.objects.filter(
-                    user=request.user, recipe=recipe).exists():
-                return Response('Этот рецепт уже в списке избранного.',
-                                status=status.HTTP_400_BAD_REQUEST)
-            Favorites.objects.create(user=request.user, recipe=recipe)
-            return Response(data=self.get_serializer(recipe).data,
-                            status=status.HTTP_201_CREATED)
-        if not Favorites.objects.filter(
+        if Favorites.objects.filter(
                 user=request.user, recipe=recipe).exists():
-            return Response('Этот рецепт еще не в списке избранного.',
+            return Response('Этот рецепт уже в списке избранного.',
                             status=status.HTTP_400_BAD_REQUEST)
+        Favorites.objects.create(user=request.user, recipe=recipe)
+        return Response(data=self.get_serializer(recipe).data,
+                        status=status.HTTP_201_CREATED)
+    
+    @favorite.mapping.delete
+    def del_favorite(self, request, **kwargs):
+        recipe = Recipe.objects.get(id=kwargs['pk'])
         favorite = Favorites.objects.get(
             user=request.user, recipe=recipe)
+        if not favorite:
+            return Response('Этот рецепт еще не в списке избранного.',
+                            status=status.HTTP_400_BAD_REQUEST)
         favorite.delete()
         return Response(data=self.get_serializer(recipe).data,
                         status=status.HTTP_204_NO_CONTENT)
