@@ -125,7 +125,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
-       
+
         recipe = obj
         user = request.user
 

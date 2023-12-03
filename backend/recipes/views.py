@@ -79,7 +79,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         Favorites.objects.create(user=request.user, recipe=recipe)
         return Response(data=self.get_serializer(recipe).data,
                         status=status.HTTP_201_CREATED)
-    
+
     @favorite.mapping.delete
     def del_favorite(self, request, **kwargs):
         recipe = Recipe.objects.get(id=kwargs['pk'])
