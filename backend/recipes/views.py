@@ -1,5 +1,6 @@
 from django.db.models import F
 from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -93,30 +94,29 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/shopping_cart',
             permission_classes=(permissions.IsAuthenticated,))
     def shopping_cart(self, request, **kwargs):
-        id_recipe = kwargs.get['pk']
-        recipe = Recipe.objects.get(id=id_recipe)
-        user = request.user
-        if user.recipes_ShoppingCart_recipes_related.objects.filter(
-                item=recipe).exists():
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
+        if ShoppingCart.objects.filter(
+                user=request.user, recipe=recipe).exists():
             return Response('Этот рецепт уже в списке покупок.',
                             status=status.HTTP_400_BAD_REQUEST)
-        ShoppingCart.objects.create(user=user, recipe=recipe)
-        serializer = RecipeListSerializer(recipe)
+        ShoppingCart.objects.create(user=request.user, recipe=recipe)
+        serializer = RecipeListSerializer(recipe, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @shopping_cart.mapping.delete
-    def del_from_shopping_cart(self, request, *args, **kwargs):
-        id_recipe = kwargs.get('pk')
-        user = request.user
-        recipe = Recipe.objects.get(id=id_recipe)
-        objects = user.recipes_ShoppingCart_recipes_related.filter(item=recipe)
-        if not objects.exists():
-            return Response({
-                'error': 'Вы не добавляли этот рецепт в список покупок.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        objects.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    # @shopping_cart.mapping.delete
+    # def del_from_shopping_cart(self, request, *args, **kwargs):
+    #     id_recipe = kwargs.get('pk')
+    #     user = request.user
+    #     recipe = Recipe.objects.get(id=id_recipe)
+    #     objects = user.recipes_ShoppingCart_recipes_related.filter(
+    # item=recipe)
+    #     if not objects.exists():
+    #         return Response({
+    #             'error': 'Вы не добавляли этот рецепт в список покупок.'},
+    #             status=status.HTTP_400_BAD_REQUEST
+    #         )
+    #     objects.delete()
+    #     return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
             url_path='download_shopping_cart',
