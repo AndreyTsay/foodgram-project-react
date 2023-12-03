@@ -119,8 +119,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path='download_shopping_cart',
             permission_classes=(permissions.IsAuthenticated,))
     def download_shopping_cart(self, request, **kwargs):
-        recipes = Recipe.objects.filter(
-            shopping_cart__user=self.request.user).order_by('name')
+        recipes = Recipe.objects.filter(shopping_cart__user=self.request.user)
         recipe_list = {}
 
         for recipe in recipes:
