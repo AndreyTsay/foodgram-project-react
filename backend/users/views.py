@@ -1,9 +1,8 @@
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, status, viewsets
-from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.contrib.auth.hashers import check_password, make_password
 
 from recipes.pagination import RecipePagination
 
@@ -11,7 +10,6 @@ from .models import User, Subscription
 from .pagination import UsersPagination
 from .serializers import (
     NewPasswordSerializer,
-    TokenSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
     UserRegistrationSerializer
@@ -22,7 +20,7 @@ class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет для регистрации пользователя, просмотра списка пользователей
     и просмотра отдельного пользователя."""
     queryset = User.objects.all()
-    pagination_class = UsersPagination
+    pagination_class = CustomPaginator
 
     def get_permissions(self):
         if self.action in ['me', 'subscribe', 'subscriptions']:
@@ -54,11 +52,13 @@ class UserViewSet(viewsets.ModelViewSet):
     def change_password(self, request):
         """Метод, позволяющий сменить пароль."""
         user = request.user
-        serializer = NewPasswordSerializer(data=request.data)
+        serializer = NewPasswordSerializer(data=request.data,
+                                           context={'request': request})
 
         serializer.is_valid(raise_exception=True)
-        if serializer.data['current_password'] == request.user.password:
-            user.password = serializer.data['new_password']
+        if check_password(serializer.data['current_password'],
+                          request.user.password):
+            user.password = make_password(serializer.data['new_password'])
             user.save(update_fields=["password"])
             return Response('Пароль успешно изменен.',
                             status=status.HTTP_204_NO_CONTENT)
@@ -66,7 +66,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST'], detail=False,
+    @action(methods=['POST', 'DELETE'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
@@ -74,22 +74,18 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
 
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
-            return Response('Вы уже подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        elif request.user == author:
-            return Response('Нельзя подписаться на самого себя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        Subscription.objects.create(user=request.user, author=author)
-        return Response(serializer.data,
-                        status=status.HTTP_201_CREATED)
+        if request.method == 'POST':
+            if Subscription.objects.filter(
+                    user=request.user, author=author).exists():
+                return Response('Вы уже подписаны на этого пользователя.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            elif request.user == author:
+                return Response('Нельзя подписаться на самого себя.',
+                                status=status.HTTP_400_BAD_REQUEST)
+            Subscription.objects.create(user=request.user, author=author)
+            return Response(serializer.data,
+                            status=status.HTTP_201_CREATED)
 
-    @subscribe.mapping.delete
-    def del_subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
         subscription = Subscription.objects.filter(
             user=request.user, author=author).first()
         if not subscription:
@@ -102,39 +98,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
             permission_classes=(permissions.IsAuthenticated,),
-            pagination_class=RecipePagination)
+            pagination_class=CustomPaginator)
     def subscriptions(self, request):
         authors = User.objects.filter(
             recipe_author__user=request.user).prefetch_related('recipes')
         page = self.paginate_queryset(authors)
 
-        if page:
-            serializer = UserRecipesSerializer(
-                page, many=True,
-                context={'request': request})
+        serializer = UserRecipesSerializer(
+            page, many=True,
+            context={'request': request})
 
-            return self.get_paginated_response(serializer.data)
-        serializer = UserRecipesSerializer(authors, many=True,
-                                           context={'request': request})
-
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-class CustomAuthToken(ObtainAuthToken):
-    """Кастомный вью-класс для получения токена по username-email."""
-    permission_classes = (permissions.AllowAny,)
-    pagination_class = None
-
-    def post(self, request, *args, **kwargs):
-        serializer = TokenSerializer(data=request.data,
-                                     context={'request': request})
-
-        serializer.is_valid(raise_exception=True)
-        user = get_object_or_404(
-            User,
-            email=serializer.data.get('email')
-        )
-        token, created = Token.objects.get_or_create(user=user)
-        return Response({
-            'auth_token': token.key,
-        })
+        return self.get_paginated_response(serializer.data)

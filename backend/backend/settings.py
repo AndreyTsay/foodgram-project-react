@@ -107,6 +107,22 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 6,
 }
 
+DJOSER = {
+    'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user_create': 'users.serializers.UserRegistrationSerializer',
+        'user': 'users.serializers.UserInfoSerializer',
+        'current_user': 'users.serializers.UserInfoSerializer',
+        'token_create': 'users.serializers.CustomTokenCreateSerializer'
+    },
+
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    },
+    'HIDE_USERS': False,
+}
+
 MEDIA_URL = '/media/'
 MEDIA_ROOT = '/media/'
 
