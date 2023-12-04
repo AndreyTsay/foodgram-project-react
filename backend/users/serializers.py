@@ -1,5 +1,6 @@
 import re
 
+from django.contrib.auth.hashers import make_password
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
@@ -47,6 +48,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                 "На этот адрес эл. почты уже зарегистрирован аккаунт!"
             )
         return value
+
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data.get('username'),
+            email=validated_data.get('email'),
+            first_name=validated_data.get('first_name'),
+            last_name=validated_data.get('last_name'),
+            password=make_password(validated_data.get('password'))
+        )
+
+        return user
 
 
 class UserInfoSerializer(serializers.ModelSerializer):

@@ -25,7 +25,7 @@ class UserViewSet(viewsets.ModelViewSet):
     pagination_class = UsersPagination
 
     def get_permissions(self):
-        if self.action in ['retrieve', 'me', 'subscribe', 'subscriptions']:
+        if self.action in ['me', 'subscribe', 'subscriptions']:
             permission_classes = [permissions.IsAuthenticated]
         else:
             permission_classes = [permissions.AllowAny]
