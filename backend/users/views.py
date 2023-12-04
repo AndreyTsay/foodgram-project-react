@@ -23,7 +23,6 @@ class UserViewSet(viewsets.ModelViewSet):
     и просмотра отдельного пользователя."""
     queryset = User.objects.all()
     pagination_class = UsersPagination
-    lookup_field = 'pk'
 
     def get_permissions(self):
         if self.action in ['retrieve', 'me', 'subscribe', 'subscriptions']:
