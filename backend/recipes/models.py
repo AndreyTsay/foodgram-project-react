@@ -1,5 +1,5 @@
 from colorfield.fields import ColorField
-from django.conf import constants
+from django import constants
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
