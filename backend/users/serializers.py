@@ -115,11 +115,10 @@ class UserRecipesSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
-    def get_response_data(self, detail=None, status_code=status.HTTP_200_OK):
+    def get_response_data(self, detail=None):
         return {
             'data': self.data,
-            'detail': detail,
-            'status_code': status_code
+            'detail': detail
         }
 
     def to_representation(self, instance):
