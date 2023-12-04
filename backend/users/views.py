@@ -71,19 +71,23 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
+        serializer = UserRecipesSerializer(
+            author, context={'request': request})
 
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
-            return Response('Вы уже подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
+        if serializer.data['is_subscribed']:
+            return Response(serializer.get_response_data(
+                detail='Вы уже подписаны на этого пользователя.',
+                status_code=status.HTTP_400_BAD_REQUEST))
         elif request.user == author:
-            return Response('Нельзя подписаться на самого себя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        Subscription.objects.create(user=request.user, author=author)
-        return Response(serializer.data,
-                        status=status.HTTP_201_CREATED)
+            return Response(
+                serializer.get_response_data(
+                    detail='Нельзя подписаться на самого себя.',
+                    status_code=status.HTTP_400_BAD_REQUEST))
+        else:
+            Subscription.objects.create(user=request.user, author=author)
+            return Response(serializer.get_response_data(
+                detail='Подписка успешно добавлена.',
+                status_code=status.HTTP_201_CREATED))
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):

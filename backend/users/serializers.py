@@ -2,6 +2,8 @@ import re
 
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
+from rest_framework import status
+from rest_framework.response import Response
 
 from recipes.serializers import RecipeContextSerializer
 
@@ -113,3 +115,13 @@ class UserRecipesSerializer(UserSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
+
+    def get_response_data(self, detail=None, status_code=status.HTTP_200_OK):
+        return {
+            'data': self.data,
+            'detail': detail,
+            'status_code': status_code
+        }
+
+    def to_representation(self, instance):
+        return self.get_response_data()
