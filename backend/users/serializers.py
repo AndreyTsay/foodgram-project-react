@@ -50,7 +50,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        user = User.objects.create(
+        user = User.objects.create_user(
             username=validated_data.get('username'),
             email=validated_data.get('email'),
             first_name=validated_data.get('first_name'),
