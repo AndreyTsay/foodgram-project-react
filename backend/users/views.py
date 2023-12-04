@@ -78,11 +78,6 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(serializer.get_response_data(
                 detail='Вы уже подписаны на этого пользователя.',
                 status_code=status.HTTP_400_BAD_REQUEST))
-        elif request.user == author:
-            return Response(
-                serializer.get_response_data(
-                    detail='Нельзя подписаться на самого себя.',
-                    status_code=status.HTTP_400_BAD_REQUEST))
         else:
             Subscription.objects.create(user=request.user, author=author)
             return Response(serializer.get_response_data(

@@ -115,11 +115,23 @@ class UserRecipesSerializer(UserSerializer):
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
-    def get_response_data(self, detail=None):
-        return {
+    def get_response_data(self, detail=None, status_code=status.HTTP_200_OK, extra_data=None):
+        response_data = {
             'data': self.data,
-            'detail': detail
+            'detail': detail,
+            'status_code': status_code
         }
+        if extra_data:
+            response_data.update(extra_data)
+
+        return response_data
 
     def to_representation(self, instance):
-        return self.get_response_data()
+        instance = super().to_representation(instance)
+
+        if 'is_subscribed' in self.data:
+            request_method = self.context.get('request').method
+            if request_method == 'POST':
+                self.data.pop('is_subscribed')
+
+        return self.data
