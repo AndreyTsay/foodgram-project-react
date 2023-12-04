@@ -1,5 +1,6 @@
 import re
 
+from django.shortcuts import get_object_or_404
 from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
@@ -113,3 +114,31 @@ class UserRecipesSerializer(UserSerializer):
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
+
+    def validate_subscribe(self, data):
+        request = self.context.get('request')
+        author_id = self.context['view'].kwargs.get('pk')
+        author = get_object_or_404(User, id=author_id)
+
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            raise serializers.ValidationError(
+                'You are already subscribed to this user.')
+
+        if request.user == author:
+            raise serializers.ValidationError(
+                'You cannot subscribe to yourself.')
+
+        return data
+
+    def validate_del_subscribe(self, data):
+        request = self.context.get('request')
+        author_id = self.context['view'].kwargs.get('pk')
+        author = get_object_or_404(User, id=author_id)
+
+        if not Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            raise serializers.ValidationError(
+                'You are not subscribed to this user.')
+
+        return data
