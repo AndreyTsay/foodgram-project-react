@@ -1,9 +1,9 @@
 import base64
 
-from django.conf import constants
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
+from recipes import constants
 from users.models import Subscription, User
 
 from .models import (
