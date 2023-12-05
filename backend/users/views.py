@@ -1,8 +1,8 @@
 from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import get_object_or_404
+from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import permissions, status, viewsets
 
 from .models import User, Subscription
 from .pagination import CustomPaginator
@@ -71,6 +71,7 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
+
         if Subscription.objects.filter(
                 user=request.user, author=author).exists():
             return Response('Вы уже подписаны на этого пользователя.',
