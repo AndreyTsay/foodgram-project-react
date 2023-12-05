@@ -197,7 +197,8 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
         tags_list = []
         for tag in tags:
             if tag in tags_list:
-                raise serializers.ValidationError('Теги не должны повторяться.')
+                raise serializers.ValidationError(
+                    'Теги не должны повторяться.')
             tags_list.append(tag)
 
         image = self.initial_data.get('image')
