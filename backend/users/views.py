@@ -1,13 +1,11 @@
+from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import get_object_or_404
-from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.contrib.auth.hashers import check_password, make_password
-
-from recipes.pagination import RecipePagination
+from rest_framework import permissions, status, viewsets
 
 from .models import User, Subscription
-from .pagination import UsersPagination
+from .pagination import CustomPaginator
 from .serializers import (
     NewPasswordSerializer,
     UserInfoSerializer,
