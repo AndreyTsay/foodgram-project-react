@@ -22,14 +22,16 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name', 'is_subscribed')
+        fields = ('id', 'email', 'username',
+                  'first_name', 'last_name', 'is_subscribed')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
 
-        return Subscription.objects.filter(author=obj, user=request.user).exists()
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
 
 
 class UserShortInfoSerializer(serializers.ModelSerializer):
@@ -88,7 +90,8 @@ class IngredientForRecipeSerializer(serializers.ModelSerializer):
 
     def validate_amount(self, value):
         if value < constants.MIN_VALUE:
-            raise serializers.ValidationError('Укажите корректное количество ингредиентов.')
+            raise serializers.ValidationError(
+                'Укажите корректное количество ингредиентов.')
         return value
 
 
@@ -154,42 +157,51 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
 
     def validate_name(self, value):
         if len(value) > constants.MAX_RECIPE_NAME_LENGTH:
-            raise serializers.ValidationError('Имя рецепта не может быть более 254 символов.')
+            raise serializers.ValidationError(
+                'Имя рецепта не может быть более 254 символов.')
         return value
 
     def validate_cooking_time(self, value):
         if value < constants.COOKING_TIME_MIN_VALUE or (
                 value > constants.COOKING_TIME_MAX_VALUE):
-            raise serializers.ValidationError('Укажите корректное время приготовления.')
+            raise serializers.ValidationError(
+                'Укажите корректное время приготовления.')
         return value
 
     def validate(self, data):
         ingredients = self.initial_data.get('ingredients')
         ingredients_list = []
         if not ingredients:
-            raise serializers.ValidationError("Нужно добавить ингредиенты в рецепт.")
+            raise serializers.ValidationError(
+                "Нужно добавить ингредиенты в рецепт.")
         for ingredient in ingredients:
             value = Ingredient.objects.filter(id=ingredient['id'])
             if not value.exists():
-                raise serializers.ValidationError({'Ошибка': 'Такого ингредиента не существует.'})
+                raise serializers.ValidationError(
+                    {'Ошибка': 'Такого ингредиента не существует.'})
             if int(ingredient['amount']) < 1:
-                raise serializers.ValidationError('Укажите корректное количество ингредиентов.')
+                raise serializers.ValidationError(
+                    'Укажите корректное количество ингредиентов.')
             if value in ingredients_list:
-                raise serializers.ValidationError('Ингредиенты не должны повторяться.')
+                raise serializers.ValidationError(
+                    'Ингредиенты не должны повторяться.')
             ingredients_list.append(value)
 
         tags = self.initial_data.get('tags')
         if not tags:
-            raise serializers.ValidationError("Необходимо указать хотя бы один тег.")
+            raise serializers.ValidationError(
+                "Необходимо указать хотя бы один тег.")
         tags_list = []
         for tag in tags:
             if tag in tags_list:
-                raise serializers.ValidationError('Теги не должны повторяться.')
+                raise serializers.ValidationError(
+                    'Теги не должны повторяться.')
             tags_list.append(tag)
 
         image = self.initial_data.get('image')
         if not image:
-            raise serializers.ValidationError("К рецепту необходимо добавить изображение.")
+            raise serializers.ValidationError(
+                "К рецепту необходимо добавить изображение.")
         return data
 
     def create(self, validated_data):
