@@ -16,19 +16,19 @@ from .models import User, Subscription
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователей."""
     username = serializers.CharField(
-        max_length=settings.USER_MAX_LENGTH_USERNAME, required=True)
+        max_length=constants.MAX_LENGTH_USERNAME, required=True)
     email = serializers.EmailField(
-        max_length=settings.USER_MAX_EMAIL_LENGTH, required=True)
+        max_length=constants.MAX_EMAIL_LENGTH, required=True)
     first_name = serializers.CharField(
-        max_length=settings.USER_MAX_FIRST_NAME_LENGTH, required=True)
+        max_length=constants.MAX_FIRST_NAME_LENGTH, required=True)
     last_name = serializers.CharField(
-        max_length=settings.USER_MAX_LAST_NAME_LENGTH, required=True)
+        max_length=constants.MAX_LAST_NAME_LENGTH, required=True)
     password = serializers.CharField(
-        max_length=settings.USER_MAX_LENGTH_PASSWORD,
+        max_length=constants.MAX_LENGTH_PASSWORD,
         required=True,
         write_only=True
     )
-
+    
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name',
@@ -133,8 +133,10 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
 
 class NewPasswordSerializer(serializers.Serializer):
     """Сериализатор для получения нового пароля."""
-    new_password = serializers.CharField(max_length=settings.USER_MAX_LENGTH_PASSWORD, required=True)
-    current_password = serializers.CharField(max_length=settings.USER_MAX_LENGTH_PASSWORD, required=True)
+    new_password = serializers.CharField(
+        max_length=constants.USER_MAX_LENGTH_PASSWORD, required=True)
+    current_password = serializers.CharField(
+        max_length=constants.USER_MAX_LENGTH_PASSWORD, required=True)
 
 
 class UserRecipesSerializer(UserSerializer):
@@ -176,10 +178,13 @@ class UserRecipesSerializer(UserSerializer):
     def validate(self, data):
         request = self.context.get('request')
         author = self.instance
-        if Subscription.objects.filter(user=request.user, author=author).exists():
-            raise serializers.ValidationError('Вы уже подписаны на этого пользователя.')
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
 
         if request.user == author:
-            raise serializers.ValidationError('Нельзя подписаться на самого себя.')
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя.')
 
         return data
