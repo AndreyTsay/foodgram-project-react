@@ -64,13 +64,14 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST', 'DELETE'], detail=False,
+    @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
+
         if Subscription.objects.filter(
                 user=request.user, author=author).exists():
             return Response('Вы уже подписаны на этого пользователя.',
