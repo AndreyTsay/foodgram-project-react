@@ -38,7 +38,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """Проверяет, что в имени не содержатся запрещенные символы и что
         оно не занято."""
         error_list = []
-        for symbol in value:
+        username = value
+        for symbol in username:
             if not re.search(r'^[\w.@+-]+$', symbol):
                 error_list.append(symbol)
         if error_list:
@@ -133,10 +134,8 @@ class UserShortInfoSerializer(serializers.ModelSerializer):
 
 class NewPasswordSerializer(serializers.Serializer):
     """Сериализатор для получения нового пароля."""
-    new_password = serializers.CharField(
-        max_length=constants.USER_MAX_LENGTH_PASSWORD, required=True)
-    current_password = serializers.CharField(
-        max_length=constants.USER_MAX_LENGTH_PASSWORD, required=True)
+    new_password = serializers.CharField(max_length=150, required=True)
+    current_password = serializers.CharField(max_length=150, required=True)
 
 
 class UserRecipesSerializer(UserSerializer):
@@ -174,17 +173,3 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
-
-    def validate(self, data):
-        request = self.context.get('request')
-        author = self.instance
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя.')
-
-        if request.user == author:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя.')
-
-        return data
