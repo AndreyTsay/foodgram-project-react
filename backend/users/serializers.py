@@ -8,18 +8,23 @@ from rest_framework import serializers
 
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
+from users import constants
 
 from .models import User, Subscription
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     """Сериализатор для регистрации пользователей."""
-    username = serializers.CharField(max_length=150, required=True)
-    email = serializers.EmailField(max_length=254, required=True)
-    first_name = serializers.CharField(max_length=150, required=True)
-    last_name = serializers.CharField(max_length=150, required=True)
+    username = serializers.CharField(
+        max_length=constants.MAX_LENGTH_USERNAME, required=True)
+    email = serializers.EmailField(
+        max_length=constants.MAX_EMAIL_LENGTH, required=True)
+    first_name = serializers.CharField(
+        max_length=constants.MAX_FIRST_NAME_LENGTH, required=True)
+    last_name = serializers.CharField(
+        max_length=constants.MAX_LAST_NAME_LENGTH, required=True)
     password = serializers.CharField(
-        max_length=150,
+        max_length=constants.MAX_LENGTH_PASSWORD,
         required=True,
         write_only=True
     )
