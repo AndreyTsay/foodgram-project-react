@@ -15,8 +15,6 @@ from .serializers import (
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    """Вьюсет для регистрации пользователя, просмотра списка пользователей
-    и просмотра отдельного пользователя."""
     queryset = User.objects.all()
     pagination_class = CustomPaginator
 
@@ -30,17 +28,13 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list' or self.request.method == 'GET':
             return UserInfoSerializer
-        elif self.action in [
-            'subscribe',
-            'subscriptions'
-        ]:
+        elif self.action in ['subscribe', 'subscriptions']:
             return UserRecipesSerializer
         return UserRegistrationSerializer
 
     @action(detail=False, url_path='me',
             permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
-        """Метод, позволяющий посмотреть свой профиль."""
         serializer = UserInfoSerializer(request.user,
                                         context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -48,7 +42,6 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False, url_path='set_password',
             permission_classes=(permissions.IsAuthenticated,))
     def change_password(self, request):
-        """Метод, позволяющий сменить пароль."""
         user = request.user
         serializer = NewPasswordSerializer(data=request.data,
                                            context={'request': request})
@@ -72,8 +65,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
 
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
+        if serializer.data.get('is_subscribed'):
             return Response('Вы уже подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
         elif request.user == author:
