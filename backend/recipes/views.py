@@ -84,7 +84,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeListSerializer(recipe, context={'request': request})
         self.validate_favorite_exists(recipe, request.user)
 
-        favorite = Favorites.objects.filter(user=request.user, recipe=recipe).first()
+        favorite = Favorites.objects.filter(
+            user=request.user, recipe=recipe).first()
 
         if not favorite:
             return Response('Этот рецепт еще не в списке избранного.',
@@ -111,11 +112,13 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer = RecipeListSerializer(recipe, context={'request': request})
         self.validate_shopping_cart_exists(recipe, request.user)
 
-        shopping_cart = ShoppingCart.objects.filter(user=request.user, recipe=recipe).first()
+        shopping_cart = ShoppingCart.objects.filter(
+            user=request.user, recipe=recipe).first()
 
         if not shopping_cart:
-            return Response({'error': 'Вы не добавляли этот рецепт в список покупок.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'error': 'Вы не добавляли этот рецепт в список покупок.'},
+                status=status.HTTP_400_BAD_REQUEST)
 
         shopping_cart.delete()
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
