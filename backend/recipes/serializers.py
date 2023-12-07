@@ -270,6 +270,40 @@ class RecipeListSerializer(serializers.ModelSerializer):
         return ShoppingCart.objects.filter(
             recipe=obj, user=request.user).exists()
 
+    def validate_favorited(self, recipe):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            raise serializers.ValidationError(
+                'Для добавления в избранное необходимо войти в систему.'
+            )
+
+        if Favorites.objects.filter(
+                user=request.user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Этот рецепт уже в избранном.'
+            )
+
+        return recipe
+
+    def validate_in_shopping_cart(self, recipe):
+        request = self.context.get('request')
+        if request.user.is_authenticated:
+            shopping_cart = ShoppingCart.objects.filter(
+                user=request.user, recipe=recipe).first()
+            if not shopping_cart:
+                raise serializers.ValidationError(
+                    {'error': 'Вы не добавляли этот рецепт в список покупок.'}
+                )
+
+    def validate_unfavorited(self, recipe):
+        request = self.context.get('request')
+        if not Favorites.objects.filter(
+                user=request.user, recipe=recipe).exists():
+            raise serializers.ValidationError(
+                'Этот рецепт не в избранном.'
+            )
+
+        return recipe
 
 class RecipeContextSerializer(serializers.ModelSerializer):
     class Meta:
