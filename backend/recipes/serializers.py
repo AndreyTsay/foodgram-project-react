@@ -305,6 +305,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
 
         return recipe
 
+
 class RecipeContextSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
