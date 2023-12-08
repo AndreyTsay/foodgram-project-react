@@ -18,14 +18,26 @@ class SubscriptionStatusField(serializers.BooleanField):
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
-
         return Subscription.objects.filter(
             author=self.parent.instance,
             user=request.user
         ).exists()
 
 
-class UserRecipesSerializer(UserSerializer):
+class ValidateSubscriptionMixin:
+    def validate_subscription(self, author):
+        request = self.context.get('request')
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
+        elif request.user == author:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя.')
+
+
+class UserRecipesSerializer(
+        serializers.ModelSerializer, ValidateSubscriptionMixin):
     is_subscribed = SubscriptionStatusField(read_only=True)
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
@@ -40,9 +52,9 @@ class UserRecipesSerializer(UserSerializer):
         request = self.context.get('request')
         if request.user.is_anonymous:
             return False
-
         return Subscription.objects.filter(
-            author=obj, user=request.user).exists()
+            author=obj, user=request.user
+        ).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -59,6 +71,11 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
+
+    def validate(self, data):
+        author = data['author']
+        self.validate_subscription(author)
+        return data
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
