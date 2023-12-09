@@ -80,6 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
+
         subscription = Subscription.objects.filter(
             user=request.user, author=author).first()
         if not subscription:
