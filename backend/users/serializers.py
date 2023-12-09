@@ -173,7 +173,7 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
-    
+
     def validate(self, data):
         if self.instance and self.instance.is_subscribed:
             raise serializers.ValidationError(
