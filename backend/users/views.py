@@ -63,7 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):
         subscription = Subscription.objects.create(
             user=request.user, author=author)
 
-        serializer.data['subscription_id'] = subscription.id
+        serializer.data['is_subscribed'] = subscription.id
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
@@ -74,7 +74,7 @@ class UserViewSet(viewsets.ModelViewSet):
             author, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
-        subscription_id = serializer.validated_data.get('subscription_id')
+        subscription_id = serializer.validated_data.get('is_subscribed')
         if subscription_id:
             Subscription.objects.filter(id=subscription_id).delete()
 

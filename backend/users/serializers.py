@@ -3,7 +3,7 @@ import re
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
-from djoser.serializers import TokenCreateSerializer
+from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
