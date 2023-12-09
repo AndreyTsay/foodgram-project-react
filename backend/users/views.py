@@ -75,7 +75,6 @@ class UserViewSet(viewsets.ModelViewSet):
         subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
             permission_classes=(permissions.IsAuthenticated,),
