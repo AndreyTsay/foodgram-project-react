@@ -57,8 +57,7 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['id'])
-        serializer = UserRecipesSerializer(data={'user': request.user.id,
-                                           'author': author.id},
+        serializer = UserRecipesSerializer(author, data={'user': request.user.id},
                                            context={'request': request})
         if serializer.is_valid(raise_exception=True):
             Subscription.objects.create(user=request.user, author=author)
