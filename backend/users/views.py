@@ -1,4 +1,5 @@
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -54,23 +55,21 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False,
             url_path=r'(?P<id>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, id):
-        data = {
-            'user': request.user.id,
-            'author': id,
-        }
+    def subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(
-            data=data, context={'request': request})
+            author, context={'request': request})
 
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
-    def del_subscribe(self, request, id):
-        subscription = Subscription.objects.filter(
-            user=request.user, author=id)
-        if subscription.exists():
+    def del_subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['pk'])
+        subscription = Subscription.objects.filter( 
+            user=request.user, author=author).first()
+        if subscription.existss():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({'errors': 'Этой записи не существует'},
