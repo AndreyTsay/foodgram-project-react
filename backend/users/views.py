@@ -56,9 +56,13 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<id>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
+        author = get_object_or_404(User, id=kwargs['id'])
+        data = {
+            'user': request.user.id,
+            'author': author.id,
+        }
         serializer = UserRecipesSerializer(
-            author, context={'request': request})
+            data=data, context={'request': request})
 
         if serializer.is_valid(raise_exception=True):
             serializer.save()
@@ -66,10 +70,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
+        author = get_object_or_404(User, id=kwargs['id'])
         subscription = Subscription.objects.filter(
             user=request.user, author=author)
-        if subscription.existss():
+        if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({'errors': 'Этой записи не существует'},
