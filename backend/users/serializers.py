@@ -60,18 +60,20 @@ class UserRecipesSerializer(UserSerializer):
         return serializer.data
 
     def validate(self, data):
-        author = data['author']
-        request = self.context.get('request')
 
-        if data.get('is_subscribed'):
+        if data('is_subscribed'):
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя.')
-
-        if request.user == author:
+        if data['user'] == data['author']:
             raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя.')
-
+                {'error': 'Нельзя подписываться на себя.'}
+            )
         return data
+
+    def to_representation(self, instance):
+        """Вывод данных другим сериализатором."""
+        return UserRecipesSerializer(
+            instance.author, context=self.context).data
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
