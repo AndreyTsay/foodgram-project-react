@@ -3,7 +3,7 @@ import re
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
-from djoser.serializers import TokenCreateSerializer
+from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
 
 from recipes.models import Recipe
@@ -13,32 +13,7 @@ from users import constants
 from .models import User, Subscription
 
 
-class SubscriptionStatusField(serializers.BooleanField):
-    def to_representation(self, value):
-        request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
-        return Subscription.objects.filter(
-            author=self.parent.instance,
-            user=request.user
-        ).exists()
-
-
-class ValidateSubscriptionMixin:
-    def validate_subscription(self, author):
-        request = self.context.get('request')
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя.')
-        elif request.user == author:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя.')
-
-
-class UserRecipesSerializer(
-        serializers.ModelSerializer, ValidateSubscriptionMixin):
-    is_subscribed = SubscriptionStatusField(read_only=True)
+class UserRecipesSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
@@ -90,7 +65,7 @@ class UserRecipesSerializer(
 
         self.validate_subscription(author)
 
-        return data
+        return True
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
