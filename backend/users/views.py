@@ -69,11 +69,12 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=kwargs['id'])
         subscription = Subscription.objects.filter(
             user=request.user, author=author).first()
-        if subscription.exists():
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response({'errors': 'Этой записи не существует'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        if not subscription:
+            return Response({'Вы не подписаны на этого пользователя.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        subscription.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
