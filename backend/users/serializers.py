@@ -38,7 +38,7 @@ class ValidateSubscriptionMixin:
 
 class UserRecipesSerializer(
         serializers.ModelSerializer, ValidateSubscriptionMixin):
-    is_subscribed = SubscriptionStatusField(read_only=True)
+    is_subscribed = SubscriptionStatusField(read_only=False)
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
 
