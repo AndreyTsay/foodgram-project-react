@@ -63,7 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):
         subscription = Subscription.objects.create(
             user=request.user, author=author)
 
-        serializer.data['subscription_id'] = subscription.id
+        serializer.data['subscription_id'] = subscription.id  
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
