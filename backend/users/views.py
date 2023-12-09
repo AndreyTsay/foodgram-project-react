@@ -59,11 +59,10 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(
             author, context={'request': request})
-
         serializer.is_valid(raise_exception=True)
         subscription = Subscription.objects.create(
             user=request.user, author=author)
-        
+
         serializer.data['subscription_id'] = subscription.id
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -75,9 +74,7 @@ class UserViewSet(viewsets.ModelViewSet):
             author, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
-        
         subscription_id = serializer.validated_data.get('subscription_id')
-        
         if subscription_id:
             Subscription.objects.filter(id=subscription_id).delete()
 
