@@ -13,6 +13,18 @@ from users import constants
 from .models import User, Subscription
 
 
+class SubscriptionStatusField(serializers.BooleanField):
+    def to_representation(self, value):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=self.parent.instance,
+            user=request.user
+        ).exists()
+
+
 class UserRecipesSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
