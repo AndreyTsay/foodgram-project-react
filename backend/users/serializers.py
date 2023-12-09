@@ -13,55 +13,8 @@ from users import constants
 from .models import User, Subscription
 
 
-class SubscriptionStatusField(serializers.BooleanField):
-    def to_representation(self, value):
-        request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
-
-        return Subscription.objects.filter(
-            author=self.parent.instance,
-            user=request.user
-        ).exists()
-
-
-class UserRecipesSerializer(UserSerializer):
-    is_subscribed = SubscriptionStatusField(read_only=True)
-    recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'username', 'first_name',
-                  'last_name', 'is_subscribed', 'recipes',
-                  'recipes_count')
-
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
-
-        return Subscription.objects.filter(
-            author=obj, user=request.user).exists()
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
-
-    def get_recipes(self, obj):
-        request = self.context.get('request')
-        recipes_limit = request.GET.get('recipes_limit')
-        recipes = Recipe.objects.filter(author=obj.id)
-        if recipes_limit:
-            recipes = recipes[:int(recipes_limit)]
-        serializer = RecipeContextSerializer(
-            recipes,
-            many=True,
-            read_only=True
-        )
-        return serializer.data
-
-
 class UserRegistrationSerializer(serializers.ModelSerializer):
+    """Сериализатор для регистрации пользователей."""
     username = serializers.CharField(
         max_length=constants.MAX_LENGTH_USERNAME, required=True)
     email = serializers.EmailField(
@@ -82,6 +35,8 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
                   'last_name', 'password')
 
     def validate_username(self, value):
+        """Проверяет, что в имени не содержатся запрещенные символы и что
+        оно не занято."""
         error_list = []
         username = value
         for symbol in username:
@@ -96,6 +51,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_email(self, value):
+        """Проверяет, что указанный адрес почты не занят."""
         if User.objects.filter(email=value).exists():
             raise serializers.ValidationError(
                 "На этот адрес эл. почты уже зарегистрирован аккаунт!"
@@ -110,6 +66,7 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             last_name=validated_data.get('last_name'),
             password=make_password(validated_data.get('password'))
         )
+
         return user
 
 
@@ -150,20 +107,69 @@ class CustomTokenCreateSerializer(TokenCreateSerializer):
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
-    is_subscribed = SubscriptionStatusField(read_only=True)
+    """Сериализатор для просмотра профилей пользователей."""
+    is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'first_name',
                   'last_name', 'is_subscribed')
 
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
+
 
 class UserShortInfoSerializer(serializers.ModelSerializer):
+    """Сериализатор для краткого отображения пользователя на главной странице
+    рецептов."""
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name')
 
 
 class NewPasswordSerializer(serializers.Serializer):
+    """Сериализатор для получения нового пароля."""
     new_password = serializers.CharField(max_length=150, required=True)
     current_password = serializers.CharField(max_length=150, required=True)
+
+
+class UserRecipesSerializer(UserSerializer):
+    """Сериализатор для просмотра профиля пользователя с его рецептами."""
+    is_subscribed = serializers.SerializerMethodField()
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes',
+                  'recipes_count')
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = request.GET.get('recipes_limit')
+        recipes = Recipe.objects.filter(author=obj.id)
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        serializer = RecipeContextSerializer(
+            recipes,
+            many=True,
+            read_only=True
+        )
+        return serializer.data

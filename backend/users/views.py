@@ -15,6 +15,8 @@ from .serializers import (
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для регистрации пользователя, просмотра списка пользователей
+    и просмотра отдельного пользователя."""
     queryset = User.objects.all()
     pagination_class = CustomPaginator
 
@@ -28,13 +30,17 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list' or self.request.method == 'GET':
             return UserInfoSerializer
-        elif self.action in ['subscribe', 'subscriptions']:
+        elif self.action in [
+            'subscribe',
+            'subscriptions'
+        ]:
             return UserRecipesSerializer
         return UserRegistrationSerializer
 
     @action(detail=False, url_path='me',
             permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
+        """Метод, позволяющий посмотреть свой профиль."""
         serializer = UserInfoSerializer(request.user,
                                         context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -42,6 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False, url_path='set_password',
             permission_classes=(permissions.IsAuthenticated,))
     def change_password(self, request):
+        """Метод, позволяющий сменить пароль."""
         user = request.user
         serializer = NewPasswordSerializer(data=request.data,
                                            context={'request': request})
@@ -65,7 +72,8 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
 
-        if serializer.data.get('is_subscribed'):
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
             return Response('Вы уже подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
         elif request.user == author:
@@ -77,18 +85,14 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
-
+        author = get_object_or_404(User, id=kwargs['id'])
         subscription = Subscription.objects.filter(
             user=request.user, author=author).first()
-        if not subscription:
-            return Response('Вы не подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        subscription.delete()
-        return Response(serializer.data,
-                        status=status.HTTP_204_NO_CONTENT)
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'errors': 'Этой записи не существует'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
