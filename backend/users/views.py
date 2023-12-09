@@ -57,36 +57,23 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
+        serializer = UserRecipesSerializer(data=request.data, context={'request': request})
 
-        if serializer.data.get('is_subscribed'):
-            return Response('Вы уже подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        elif request.user == author:
-            return Response('Нельзя подписаться на самого себя.',
-                            status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
 
         Subscription.objects.create(user=request.user, author=author)
-
-        serializer.data['is_subscribed'] = True
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
+        serializer = UserRecipesSerializer(author, context={'request': request})
 
-        subscription = Subscription.objects.filter(
-            user=request.user, author=author
-        ).first()
+        serializer.is_valid(raise_exception=True)
+        subscription_id = serializer.validated_data.get('subscription_id')
+        if subscription_id:
+            Subscription.objects.filter(id=subscription_id).delete()
 
-        if not subscription:
-            return Response('Вы не подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        subscription.delete()
-        serializer.data['is_subscribed'] = False
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
