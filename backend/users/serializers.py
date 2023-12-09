@@ -72,7 +72,7 @@ class UserRecipesSerializer(UserSerializer):
 
     def to_representation(self, instance):
         """Вывод данных другим сериализатором."""
-        return UserRecipesSerializer(
+        return UserInfoSerializer(
             instance.author, context=self.context).data
 
 
