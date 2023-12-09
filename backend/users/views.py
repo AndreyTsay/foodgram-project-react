@@ -58,7 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
-                                        context={'request': request})
+                                           context={'request': request})
 
         if serializer.data.get('is_subscribed'):
             return Response('Вы уже подписаны на этого пользователя.',
@@ -72,12 +72,11 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.data['is_subscribed'] = True
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
-                                        context={'request': request})
+                                           context={'request': request})
 
         subscription = Subscription.objects.filter(
             user=request.user, author=author
