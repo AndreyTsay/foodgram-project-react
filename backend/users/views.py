@@ -57,22 +57,30 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
+        serializer = UserRecipesSerializer(
+            author, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
-        Subscription.objects.create(user=request.user, author=author)
+        subscription = Subscription.objects.create(
+            user=request.user, author=author)
+        
+        serializer.data['subscription_id'] = subscription.id
+
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
+        serializer = UserRecipesSerializer(
+            author, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
-        subscription = serializer.validated_data['id']
-        subscription.delete()
+        
+        subscription_id = serializer.validated_data.get('subscription_id')
+        
+        if subscription_id:
+            Subscription.objects.filter(id=subscription_id).delete()
+
         return Response(serializer.data, status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
