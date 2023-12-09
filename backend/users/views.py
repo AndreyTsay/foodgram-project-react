@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import make_password
+from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
@@ -47,13 +47,18 @@ class UserViewSet(viewsets.ModelViewSet):
                                            context={'request': request})
 
         serializer.is_valid(raise_exception=True)
-        user.password = make_password(serializer.data['new_password'])
-        user.save(update_fields=["password"])
-        return Response(
-            'Пароль успешно изменен.', status=status.HTTP_204_NO_CONTENT)
+        if check_password(serializer.data['current_password'],
+                          request.user.password):
+            user.password = make_password(serializer.data['new_password'])
+            user.save(update_fields=["password"])
+            return Response('Пароль успешно изменен.',
+                            status=status.HTTP_204_NO_CONTENT)
+
+        return Response('Неверный текущий пароль.',
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['POST'], detail=False,
-            url_path=r'(?P<id>\d+)/subscribe',
+            url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
@@ -74,7 +79,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['id'])
         subscription = Subscription.objects.filter(
-            user=request.user, author=author).first
+            user=request.user, author=author).first()
         if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
