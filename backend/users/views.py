@@ -1,5 +1,4 @@
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -61,7 +60,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'author': id,
         }
         serializer = UserRecipesSerializer(
-            data=request.data, context={'request': request})
+            data=data, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
         serializer.save()
@@ -69,7 +68,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, id):
-        subscription = Subscription.objects.filter( 
+        subscription = Subscription.objects.filter(
             user=request.user, author=id)
         if subscription.exists():
             subscription.delete()
