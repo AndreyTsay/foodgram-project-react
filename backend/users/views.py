@@ -57,7 +57,8 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(data=request.data, context={'request': request})
+        serializer = UserRecipesSerializer(
+            data=request.data, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
 
@@ -67,7 +68,8 @@ class UserViewSet(viewsets.ModelViewSet):
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author, context={'request': request})
+        serializer = UserRecipesSerializer(
+            author, context={'request': request})
 
         serializer.is_valid(raise_exception=True)
         subscription_id = serializer.validated_data.get('subscription_id')
