@@ -56,27 +56,30 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<id>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['id'])
-        serializer = UserRecipesSerializer(author,
-                                           data={'user': request.user.id},
-                                           context={'request': request})
-        if serializer.is_valid(raise_exception=True):
-            Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    @subscribe.mapping.delete
-    def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
-        subscription = Subscription.objects.filter(
-            user=request.user, author=author).first()
-        if not subscription:
-            return Response('Вы не подписаны на этого пользователя.',
+
+        if serializer.data.get('is_subscribed'):
+            return Response('Вы уже подписаны на этого пользователя.',
                             status=status.HTTP_400_BAD_REQUEST)
-        subscription.delete()
+        elif request.user == author:
+            return Response('Нельзя подписаться на самого себя.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        Subscription.objects.create(user=request.user, author=author)
         return Response(serializer.data,
-                        status=status.HTTP_204_NO_CONTENT)
+                        status=status.HTTP_201_CREATED)
+
+    @subscribe.mapping.delete
+    def del_subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['id'])
+        subscription = Subscription.objects.filter(
+            user=request.user, author=author).first
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response({'errors': 'Этой записи не существует'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
