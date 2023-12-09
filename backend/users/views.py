@@ -52,7 +52,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'Пароль успешно изменен.', status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['POST'], detail=False,
-            url_path=r'(?P<pk>\d+)/subscribe',
+            url_path=r'(?P<id>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, id):
         data = {
