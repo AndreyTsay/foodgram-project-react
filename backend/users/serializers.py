@@ -46,7 +46,7 @@ class UserRecipesSerializer(
         model = User
         fields = ('id', 'email', 'username', 'first_name',
                   'last_name', 'is_subscribed', 'recipes',
-                  'recipes_count', 'subscription_id')
+                  'recipes_count')
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
