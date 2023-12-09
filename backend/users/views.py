@@ -64,7 +64,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer.data['is_subscribed'] = True
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
