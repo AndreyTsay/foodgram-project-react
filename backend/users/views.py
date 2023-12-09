@@ -68,7 +68,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def del_subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['id'])
         subscription = Subscription.objects.filter(
-            user=request.user, author=author)
+            user=request.user, author=author).first()
         if subscription.exists():
             subscription.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
