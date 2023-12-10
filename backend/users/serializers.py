@@ -124,7 +124,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
             author=obj, user=request.user).exists()
 
 
-
 class UserShortInfoSerializer(serializers.ModelSerializer):
     """Сериализатор для краткого отображения пользователя на главной странице
     рецептов."""
