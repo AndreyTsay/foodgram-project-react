@@ -60,10 +60,9 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, id):
         user = request.user
-        author_id = kwargs['pk']
-        author = get_object_or_404(User, id=author_id)
+        author = get_object_or_404(User, pk=id)
 
         serializer = UserRecipesSerializer(author,
                                            data=request.data,
