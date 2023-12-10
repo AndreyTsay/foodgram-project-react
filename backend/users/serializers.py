@@ -181,18 +181,18 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Subscription
-        fields = ('following_user', 'recipe_author')
+        fields = ('user', 'author')
         validators = [
             UniqueTogetherValidator(
                 queryset=Subscription.objects.all(),
-                fields=('following_user', 'recipe_author'),
+                fields=('user', 'author'),
                 message='Вы уже подписались на этого пользователя.'
             )
         ]
 
     def validate(self, data):
         """Запрет подписки на себя."""
-        if data['following_user'] == data['recipe_author']:
+        if data['user'] == data['author']:
             raise serializers.ValidationError(
                 {'error': 'Нельзя подписываться на себя.'}
             )
