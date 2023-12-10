@@ -122,6 +122,8 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
         return Subscription.objects.filter(
             author=obj, user=request.user).exists()
+    
+
 
 
 class UserShortInfoSerializer(serializers.ModelSerializer):
@@ -173,3 +175,13 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
+
+    def validate(self, attrs):
+        if attrs('is_subscribed'):
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
+        if attrs['user'] == attrs['author']:
+            raise serializers.ValidationError(
+                {'error': 'Нельзя подписываться на себя.'}
+            )
+        return attrs
