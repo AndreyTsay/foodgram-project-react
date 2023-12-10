@@ -64,7 +64,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         author_id = self.kwargs.get('id')
         author = get_object_or_404(User, id=author_id)
-        
+
         serializer = UserRecipesSerializer(author,
                                            data=request.data,
                                            context={"request": request})

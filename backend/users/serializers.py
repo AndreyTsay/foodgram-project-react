@@ -3,7 +3,7 @@ import re
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
-from djoser.serializers import TokenCreateSerializer
+from djoser.serializers import TokenCreateSerializer, UserSerializer
 from rest_framework import serializers, status
 
 from recipes.models import Recipe
@@ -153,7 +153,7 @@ class UserRecipesSerializer(UserSerializer):
     def validate(self, data):
         author = self.instance
         user = self.context.get('request').user
-        if Subscribe.objects.filter(author=author, user=user).exists():
+        if Subscription.objects.filter(author=author, user=user).exists():
             raise serializers.ValidationError(
                 detail='Вы уже подписаны на этого пользователя!',
                 code=status.HTTP_400_BAD_REQUEST
