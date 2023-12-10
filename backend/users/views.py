@@ -73,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
         author = get_object_or_404(User, id=kwargs['pk'])
         data = {
             'user': request.user.id,
-            'author': author,
+            'author': author
         }
         serializer = SubscriptionSerializer(
             data=data, context={'request': request})
