@@ -176,7 +176,7 @@ class UserRecipesSerializer(UserSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        if request.data.get('is_subscribed'):
+        if data.get('is_subscribed'):
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя.')
         if request.user == data['author']:
