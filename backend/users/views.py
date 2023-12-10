@@ -61,14 +61,14 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(data={'request': request,
-                                                 'author': author})
+        author = get_object_or_404(User, id=kwargs['pk']) 
+        serializer = UserRecipesSerializer(
+            data={'request': request, 'author': author}) 
 
-        if serializer.is_valid():
-            Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
+        if serializer.is_valid(): 
+            Subscription.objects.create(user=request.user, author=author) 
+            return Response(serializer.data, status=status.HTTP_201_CREATED) 
+        else: 
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

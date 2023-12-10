@@ -175,14 +175,15 @@ class UserRecipesSerializer(UserSerializer):
         return serializer.data
 
     def validate(self, data):
-        user = data['user']
-        author = data['author']
+        request = self.context.get('request')
+        author = data.get('author')
 
-        if Subscription.objects.filter(user=user, author=author).exists():
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя.')
 
-        if user == author:
+        if request.user == author:
             raise serializers.ValidationError(
                 'Нельзя подписаться на самого себя.')
 
