@@ -1,23 +1,22 @@
 from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import get_object_or_404
-
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from djoser import views
+
 from .models import User, Subscription
 from .pagination import CustomPaginator
 from .serializers import (
     NewPasswordSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
-    UserRegistrationSerializer,
-    SubscribeSerializer,
-    CustomUserSerializer
+    UserRegistrationSerializer
 )
 
 
 class UserViewSet(viewsets.ModelViewSet):
+    """Вьюсет для регистрации пользователя, просмотра списка пользователей
+    и просмотра отдельного пользователя."""
     queryset = User.objects.all()
     pagination_class = CustomPaginator
 
@@ -31,13 +30,17 @@ class UserViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list' or self.request.method == 'GET':
             return UserInfoSerializer
-        elif self.action in ['subscribe', 'subscriptions']:
+        elif self.action in [
+            'subscribe',
+            'subscriptions'
+        ]:
             return UserRecipesSerializer
         return UserRegistrationSerializer
 
     @action(detail=False, url_path='me',
             permission_classes=(permissions.IsAuthenticated,))
     def me(self, request):
+        """Метод, позволяющий посмотреть свой профиль."""
         serializer = UserInfoSerializer(request.user,
                                         context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -45,6 +48,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False, url_path='set_password',
             permission_classes=(permissions.IsAuthenticated,))
     def change_password(self, request):
+        """Метод, позволяющий сменить пароль."""
         user = request.user
         serializer = NewPasswordSerializer(data=request.data,
                                            context={'request': request})
@@ -60,47 +64,51 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-
-class CustomUserViewSet(views.UserViewSet):
-    queryset = User.objects.all()
-    serializer_class = CustomUserSerializer
-    pagination_class = CustomPaginator
-
-    @action(
-        detail=True,
-        methods=['post', 'delete'],
-        permission_classes=[permissions.IsAuthenticated]
-    )
+    @action(methods=['POST'], detail=False,
+            url_path=r'(?P<pk>\d+)/subscribe',
+            permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        user = request.user
-        author_id = self.kwargs.get('id')
-        author = get_object_or_404(User, id=author_id)
+        author = get_object_or_404(User, id=kwargs['pk'])
+        serializer = UserRecipesSerializer(author,
+                                           context={'request': request})
 
-        if request.method == 'POST':
-            serializer = SubscribeSerializer(author,
-                                             data=request.data,
-                                             context={"request": request})
-            serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        serializer.is_valid(raise_exception=True)
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            return Response('Вы уже подписаны на этого пользователя.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        elif request.user == author:
+            return Response('Нельзя подписаться на самого себя.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        Subscription.objects.create(user=request.user, author=author)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
 
-        if request.method == 'DELETE':
-            subscription = get_object_or_404(Subscription,
-                                             user=user,
-                                             author=author)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return None
+    @subscribe.mapping.delete
+    def del_subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, id=kwargs['pk'])
+        serializer = UserRecipesSerializer(author,
+                                           context={'request': request})
+        subscription = Subscription.objects.filter(
+            user=request.user, author=author).first()
+        if not subscription:
+            return Response('Вы не подписаны на этого пользователя.',
+                            status=status.HTTP_400_BAD_REQUEST)
+        subscription.delete()
+        return Response(serializer.data,
+                        status=status.HTTP_204_NO_CONTENT)
 
-    @action(
-        detail=False,
-        permission_classes=[permissions.IsAuthenticated]
-    )
+    @action(methods=['GET'], detail=False,
+            url_path='subscriptions',
+            permission_classes=(permissions.IsAuthenticated,),
+            pagination_class=CustomPaginator)
     def subscriptions(self, request):
-        queryset = User.objects.filter(
+        authors = User.objects.filter(
             recipe_author__user=request.user).prefetch_related('recipes')
-        pages = self.paginate_queryset(queryset)
-        serializer = SubscribeSerializer(pages,
-                                         many=True,
-                                         context={'request': request})
+        page = self.paginate_queryset(authors)
+
+        serializer = UserRecipesSerializer(
+            page, many=True,
+            context={'request': request})
+
         return self.get_paginated_response(serializer.data)
