@@ -97,8 +97,8 @@ class CustomUserViewSet(views.UserViewSet):
         permission_classes=[permissions.IsAuthenticated]
     )
     def subscriptions(self, request):
-        user = request.user
-        queryset = User.objects.filter(subscribing__user=user)
+        queryset = User.objects.filter(
+            recipe_author__user=request.user).prefetch_related('recipes')
         pages = self.paginate_queryset(queryset)
         serializer = SubscribeSerializer(pages,
                                          many=True,
