@@ -5,7 +5,7 @@ from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
 from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
-
+from django.shortcuts import get_object_or_404
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
 from users import constants
@@ -176,7 +176,9 @@ class UserRecipesSerializer(UserSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        author = data.get('author')
+        user_id = data.get('id')
+
+        author = get_object_or_404(User, id=user_id)
 
         if Subscription.objects.filter(
                 user=request.user, author=author).exists():
