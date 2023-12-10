@@ -62,7 +62,7 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         user = request.user
-        author_id = self.kwargs.get('id')
+        author_id = kwargs['pk']
         author = get_object_or_404(User, id=author_id)
 
         serializer = UserRecipesSerializer(author,

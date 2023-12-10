@@ -151,14 +151,14 @@ class UserRecipesSerializer(UserSerializer):
                   'recipes_count')
 
     def validate(self, data):
-        author = self.instance
+        author = data.get('id')
         user = self.context.get('request').user
         if Subscription.objects.filter(author=author, user=user).exists():
             raise serializers.ValidationError(
                 detail='Вы уже подписаны на этого пользователя!',
                 code=status.HTTP_400_BAD_REQUEST
             )
-        if user == author:
+        if user,id == author:
             raise serializers.ValidationError(
                 detail='Вы не можете подписаться на самого себя!',
                 code=status.HTTP_400_BAD_REQUEST
