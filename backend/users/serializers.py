@@ -122,7 +122,6 @@ class UserInfoSerializer(serializers.ModelSerializer):
 
         return Subscription.objects.filter(
             author=obj, user=request.user).exists()
-    
 
 
 
