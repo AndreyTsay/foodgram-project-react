@@ -179,8 +179,4 @@ class UserRecipesSerializer(UserSerializer):
         if data('is_subscribed'):
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя.')
-        if data['user'] == data['author']:
-            raise serializers.ValidationError(
-                {'error': 'Нельзя подписываться на себя.'}
-            )
         return data
