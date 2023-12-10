@@ -2,10 +2,10 @@ import re
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
+from django.shortcuts import get_object_or_404
 from djoser.conf import settings
 from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
@@ -175,30 +175,17 @@ class UserRecipesSerializer(UserSerializer):
         )
         return serializer.data
 
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    """Создание и удаление подписок."""
-
-    class Meta:
-        model = Subscription
-        fields = ('user', 'author')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=('user', 'author'),
-                message='Вы уже подписались на этого пользователя.'
-            )
-        ]
-
     def validate(self, data):
-        """Запрет подписки на себя."""
-        if data['user'] == data['author']:
-            raise serializers.ValidationError(
-                {'error': 'Нельзя подписываться на себя.'}
-            )
-        return data
+        request = self.context.get('request')
+        author = get_object_or_404(User, id=data['pk'])
 
-    def to_representation(self, instance):
-        """Вывод данных другим сериализатором."""
-        return UserRecipesSerializer(
-            instance.author, context=self.context).data
+        if Subscription.objects.filter(
+                user=request.user, author=author).exists():
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
+
+        elif request.user == author:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя.')
+
+        return data

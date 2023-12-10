@@ -10,8 +10,7 @@ from .serializers import (
     NewPasswordSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
-    UserRegistrationSerializer,
-    SubscriptionSerializer
+    UserRegistrationSerializer
 )
 
 
@@ -69,17 +68,14 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        """Подписка на пользователя."""
-        author = get_object_or_404(User, id=kwargs['pk'])
-        data = {
-            'user': request.user.id,
-            'author': author
-        }
-        serializer = SubscriptionSerializer(
-            data=data, context={'request': request})
+        serializer = UserRecipesSerializer(
+            data={'pk': kwargs['pk']}, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        author = get_object_or_404(User, id=kwargs['pk'])
+        Subscription.objects.create(user=request.user, author=author)
+        return Response(serializer.data,
+                        status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
