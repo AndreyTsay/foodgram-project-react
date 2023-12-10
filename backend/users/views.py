@@ -1,16 +1,19 @@
 from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import get_object_or_404
+
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
+from djoser import views
 from .models import User, Subscription
 from .pagination import CustomPaginator
 from .serializers import (
     NewPasswordSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
-    UserRegistrationSerializer
+    UserRegistrationSerializer,
+    SubscribeSerializer,
+    CustomUserSerializer
 )
 
 
@@ -57,45 +60,47 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST'], detail=False,
-            url_path=r'(?P<pk>\d+)/subscribe',
-            permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, id):
+
+class CustomUserViewSet(views.UserViewSet):
+    queryset = User.objects.all()
+    serializer_class = CustomUserSerializer
+    pagination_class = CustomPaginator
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[permissions.IsAuthenticated]
+    )
+    def subscribe(self, request, **kwargs):
         user = request.user
-        author = get_object_or_404(User, pk=id)
+        author_id = self.kwargs.get('id')
+        author = get_object_or_404(User, id=author_id)
 
-        serializer = UserRecipesSerializer(author,
-                                           data=request.data,
-                                           context={"request": request})
-        serializer.is_valid(raise_exception=True)
-        Subscription.objects.create(user=user, author=author)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if request.method == 'POST':
+            serializer = SubscribeSerializer(author,
+                                             data=request.data,
+                                             context={"request": request})
+            serializer.is_valid(raise_exception=True)
+            Subscription.objects.create(user=user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @subscribe.mapping.delete
-    def del_subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
-        subscription = Subscription.objects.filter(
-            user=request.user, author=author).first()
-        if not subscription:
-            return Response('Вы не подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        subscription.delete()
-        return Response(serializer.data,
-                        status=status.HTTP_204_NO_CONTENT)
+        if request.method == 'DELETE':
+            subscription = get_object_or_404(Subscription,
+                                             user=user,
+                                             author=author)
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return None
 
-    @action(methods=['GET'], detail=False,
-            url_path='subscriptions',
-            permission_classes=(permissions.IsAuthenticated,),
-            pagination_class=CustomPaginator)
+    @action(
+        detail=False,
+        permission_classes=[permissions.IsAuthenticated]
+    )
     def subscriptions(self, request):
-        authors = User.objects.filter(
-            recipe_author__user=request.user).prefetch_related('recipes')
-        page = self.paginate_queryset(authors)
-
-        serializer = UserRecipesSerializer(
-            page, many=True,
-            context={'request': request})
-
+        user = request.user
+        queryset = User.objects.filter(subscribing__user=user)
+        pages = self.paginate_queryset(queryset)
+        serializer = SubscribeSerializer(pages,
+                                         many=True,
+                                         context={'request': request})
         return self.get_paginated_response(serializer.data)
