@@ -73,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
             author, context={'request': request})
 
         if serializer.is_valid(raise_exception=True):
-            serializer.save()
+            Subscription.objects.create(user=request.user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
