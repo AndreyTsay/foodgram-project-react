@@ -5,7 +5,6 @@ from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
 from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
-from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
@@ -175,52 +174,16 @@ class UserRecipesSerializer(UserSerializer):
         )
         return serializer.data
 
-
-class CustomUserSerializer(serializers.ModelSerializer):
-    """Сериализатор пользователей."""
-
-    is_subscribed = serializers.SerializerMethodField()
-
-    class Meta:
-        model = User
-        fields = ('email', 'id', 'username',
-                  'first_name', 'last_name',
-                  'is_subscribed')
-
-    def get_is_subscribed(self, author):
-        """
-        Проверка подписан ли делающий запрос пользователь
-        на просматриваемого пользователя.
-        """
-        requesting_user = self.context.get('request').user
-        return (requesting_user.is_authenticated
-                and requesting_user.subscriptions.filter(
-                    author=author).exists())
-
-
-class SubscriptionSerializer(serializers.ModelSerializer):
-    """Создание и удаление подписок."""
-
-    class Meta:
-        model = Subscription
-        fields = ('user', 'author')
-        validators = [
-            UniqueTogetherValidator(
-                queryset=Subscription.objects.all(),
-                fields=('user', 'author'),
-                message='Вы уже подписались на этого пользователя.'
-            )
-        ]
-
     def validate(self, data):
-        """Запрет подписки на себя."""
-        if data['user'] == data['author']:
-            raise serializers.ValidationError(
-                {'error': 'Нельзя подписываться на себя.'}
-            )
-        return data
+        request = data['request']
+        author = data['author']
 
-    def to_representation(self, instance):
-        """Вывод данных другим сериализатором."""
-        return CustomUserSerializer(
-            instance.author, context=self.context).data
+        if data.get('is_subscribed'):
+            raise serializers.ValidationError(
+                'Вы уже подписаны на этого пользователя.')
+
+        if request.user == author:
+            raise serializers.ValidationError(
+                'Нельзя подписаться на самого себя.')
+
+        return data
