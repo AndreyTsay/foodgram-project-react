@@ -63,8 +63,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
         serializer = UserRecipesSerializer(
-            data={'is_subscribed':
-                  UserRecipesSerializer.data.get('is_subscribed'),
+            data={
                   'request': request,
                   'author': author})
 
