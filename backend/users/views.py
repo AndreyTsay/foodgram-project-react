@@ -68,11 +68,12 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, id):
+    def subscribe(self, request, **kwargs):
         """Подписка на пользователя."""
+        author = get_object_or_404(User, id=kwargs['pk'])
         data = {
             'user': request.user.id,
-            'author': id,
+            'author': author,
         }
         serializer = SubscriptionSerializer(
             data=data, context={'request': request})
