@@ -3,9 +3,9 @@ import re
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
-from djoser.serializers import UserSerializer, TokenCreateSerializer
-from rest_framework import serializers
-from django.shortcuts import get_object_or_404
+from djoser.serializers import TokenCreateSerializer
+from rest_framework import serializers, status
+
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
 from users import constants
@@ -150,6 +150,21 @@ class UserRecipesSerializer(UserSerializer):
                   'last_name', 'is_subscribed', 'recipes',
                   'recipes_count')
 
+    def validate(self, data):
+        author = self.instance
+        user = self.context.get('request').user
+        if Subscribe.objects.filter(author=author, user=user).exists():
+            raise serializers.ValidationError(
+                detail='Вы уже подписаны на этого пользователя!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        if user == author:
+            raise serializers.ValidationError(
+                detail='Вы не можете подписаться на самого себя!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        return data
+
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user.is_anonymous:
@@ -173,20 +188,3 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
-
-    def validate(self, data):
-        request = self.context.get('request')
-        user_id = data.get('id')
-
-        author = get_object_or_404(User, id=user_id)
-
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
-            raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя.')
-
-        if request.user == author:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя.')
-
-        return data

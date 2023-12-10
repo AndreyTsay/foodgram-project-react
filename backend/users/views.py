@@ -61,17 +61,16 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        user_id = kwargs['pk']
-        author = get_object_or_404(User, id=user_id)
-        serializer = UserRecipesSerializer(
-            data={'request': request, 'id': user_id})
-
-        if serializer.is_valid():
-            Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        user = request.user
+        author_id = self.kwargs.get('id')
+        author = get_object_or_404(User, id=author_id)
+        
+        serializer = UserRecipesSerializer(author,
+                                           data=request.data,
+                                           context={"request": request})
+        serializer.is_valid(raise_exception=True)
+        Subscription.objects.create(user=user, author=author)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
     def del_subscribe(self, request, **kwargs):
