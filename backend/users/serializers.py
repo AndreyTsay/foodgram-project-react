@@ -5,6 +5,7 @@ from django.contrib.auth.hashers import make_password
 from djoser.conf import settings
 from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
@@ -174,9 +175,30 @@ class UserRecipesSerializer(UserSerializer):
         )
         return serializer.data
 
-    def validate(self, data):
 
-        if data('is_subscribed'):
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Создание и удаление подписок."""
+
+    class Meta:
+        model = Subscription
+        fields = ('following_user', 'recipe_author')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('following_user', 'recipe_author'),
+                message='Вы уже подписались на этого пользователя.'
+            )
+        ]
+
+    def validate(self, data):
+        """Запрет подписки на себя."""
+        if data['following_user'] == data['recipe_author']:
             raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя.')
+                {'error': 'Нельзя подписываться на себя.'}
+            )
         return data
+
+    def to_representation(self, instance):
+        """Вывод данных другим сериализатором."""
+        return UserRecipesSerializer(
+            instance.author, context=self.context).data
