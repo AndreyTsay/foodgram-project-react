@@ -72,7 +72,6 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = UserRecipesSerializer(author,
                                            context={'request': request})
 
-        serializer.is_valid(raise_exception=True)
         if Subscription.objects.filter(
                 user=request.user, author=author).exists():
             return Response('Вы уже подписаны на этого пользователя.',
