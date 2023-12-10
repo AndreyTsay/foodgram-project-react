@@ -83,7 +83,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Подписка на пользователя."""
         data = {
             'user': request.user.id,
-            'author': id,s
+            'author': id,
         }
         serializer = SubscriptionSerializer(
             data=data, context={'request': request})
