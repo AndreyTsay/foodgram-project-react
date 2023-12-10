@@ -67,7 +67,7 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, **kwargs,  pk=None):
+    def subscribe(self, request, pk=None, **kwargs):
         serializer = UserRecipesSerializer(
             data={'pk': pk}, context={'request': request})
         serializer.is_valid(raise_exception=True)
