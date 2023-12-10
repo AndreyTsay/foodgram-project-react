@@ -74,7 +74,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         author = self.get_object()
         Subscription.objects.get_or_create(user=request.user, author=author)
-        
+
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
 
