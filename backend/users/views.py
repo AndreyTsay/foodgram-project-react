@@ -10,7 +10,8 @@ from .serializers import (
     NewPasswordSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
-    UserRegistrationSerializer
+    UserRegistrationSerializer,
+    SubscriptionSerializer
 )
 
 
@@ -72,7 +73,7 @@ class UserViewSet(viewsets.ModelViewSet):
         queryset = User.objects.filter(
             author__subscriber=request.user).prefetch_related('recipe')
         page = self.paginate_queryset(queryset)
-        serializer = SubscriptionResponseSerializer(
+        serializer = UserRecipesSerializer(
             page, many=True, context={'request': request})
         return self.get_paginated_response(serializer.data)
 
@@ -82,7 +83,7 @@ class UserViewSet(viewsets.ModelViewSet):
         """Подписка на пользователя."""
         data = {
             'user': request.user.id,
-            'author': id,
+            'author': id,s
         }
         serializer = SubscriptionSerializer(
             data=data, context={'request': request})
