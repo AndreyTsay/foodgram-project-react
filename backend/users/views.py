@@ -68,12 +68,12 @@ class UserViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['id'])
-        serializer = UserRecipesSerializer(author,
-                                           data={'user': request.user.id},
-                                           context={'request': request})
+        author = get_object_or_404(User, id=kwargs['pk'])
+        serializer = UserRecipesSerializer(
+            author, context={'request': request})
+
         if serializer.is_valid(raise_exception=True):
-            Subscription.objects.create(user=request.user, author=author)
+            serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @subscribe.mapping.delete
