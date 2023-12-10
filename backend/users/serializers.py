@@ -158,7 +158,7 @@ class UserRecipesSerializer(UserSerializer):
                 detail='Вы уже подписаны на этого пользователя!',
                 code=status.HTTP_400_BAD_REQUEST
             )
-        if user,id == author:
+        if user.id == author:
             raise serializers.ValidationError(
                 detail='Вы не можете подписаться на самого себя!',
                 code=status.HTTP_400_BAD_REQUEST
