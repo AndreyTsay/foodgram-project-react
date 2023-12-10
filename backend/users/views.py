@@ -67,13 +67,14 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, **kwargs):
+    def subscribe(self, request, **kwargs,  pk=None):
         serializer = UserRecipesSerializer(
-            data={'pk': kwargs['pk']}, context={'request': request})
+            data={'pk': pk}, context={'request': request})
         serializer.is_valid(raise_exception=True)
 
-        author = get_object_or_404(User, id=kwargs['pk'])
-        Subscription.objects.create(user=request.user, author=author)
+        author = self.get_object()
+        Subscription.objects.get_or_create(user=request.user, author=author)
+        
         return Response(serializer.data,
                         status=status.HTTP_201_CREATED)
 

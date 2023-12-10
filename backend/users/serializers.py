@@ -175,6 +175,14 @@ class UserRecipesSerializer(UserSerializer):
         )
         return serializer.data
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['recipes_count'] = instance.recipes.count()
+        data['recipes'] = RecipeContextSerializer(
+            instance.recipes.all()[:5], many=True,
+            read_only=True).data
+        return data
+
     def validate(self, data):
         request = self.context.get('request')
         author = get_object_or_404(User, id=data['pk'])
