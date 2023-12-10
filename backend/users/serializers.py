@@ -2,10 +2,10 @@ import re
 
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import make_password
-from django.shortcuts import get_object_or_404
 from djoser.conf import settings
 from djoser.serializers import UserSerializer, TokenCreateSerializer
 from rest_framework import serializers
+from rest_framework.validators import UniqueTogetherValidator
 
 from recipes.models import Recipe
 from recipes.serializers import RecipeContextSerializer
@@ -151,6 +151,14 @@ class UserRecipesSerializer(UserSerializer):
                   'last_name', 'is_subscribed', 'recipes',
                   'recipes_count')
 
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
+
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
@@ -167,17 +175,52 @@ class UserRecipesSerializer(UserSerializer):
         )
         return serializer.data
 
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    """Сериализатор пользователей."""
+
+    is_subscribed = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username',
+                  'first_name', 'last_name',
+                  'is_subscribed')
+
+    def get_is_subscribed(self, author):
+        """
+        Проверка подписан ли делающий запрос пользователь
+        на просматриваемого пользователя.
+        """
+        requesting_user = self.context.get('request').user
+        return (requesting_user.is_authenticated
+                and requesting_user.subscriptions.filter(
+                    author=author).exists())
+
+
+class SubscriptionSerializer(serializers.ModelSerializer):
+    """Создание и удаление подписок."""
+
+    class Meta:
+        model = Subscription
+        fields = ('user', 'author')
+        validators = [
+            UniqueTogetherValidator(
+                queryset=Subscription.objects.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписались на этого пользователя.'
+            )
+        ]
+
     def validate(self, data):
-        request = self.context.get('request')
-        author = get_object_or_404(User, id=data['pk'])
-
-        if Subscription.objects.filter(
-                user=request.user, author=author).exists():
+        """Запрет подписки на себя."""
+        if data['user'] == data['author']:
             raise serializers.ValidationError(
-                'Вы уже подписаны на этого пользователя.')
-
-        elif request.user == author:
-            raise serializers.ValidationError(
-                'Нельзя подписаться на самого себя.')
-
+                {'error': 'Нельзя подписываться на себя.'}
+            )
         return data
+
+    def to_representation(self, instance):
+        """Вывод данных другим сериализатором."""
+        return CustomUserSerializer(
+            instance.author, context=self.context).data
