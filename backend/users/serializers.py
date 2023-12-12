@@ -175,7 +175,7 @@ class UserRecipesSerializer(UserSerializer):
         return serializer.data
 
 
-class ValidateSubscribe(UserSerializer):
+class ValidateSubscribe(serializers.ModelSerializer):
 
     class Meta:
         model = User
