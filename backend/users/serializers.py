@@ -151,13 +151,20 @@ class UserRecipesSerializer(UserSerializer):
                   'last_name', 'is_subscribed', 'recipes',
                   'recipes_count')
 
-    # def get_is_subscribed(self, obj):
-    #     request = self.context.get('request')
-    #     if request.user.is_anonymous:
-    #         return False
+    def validate(self, data):
+        if self.context['request'].user == data:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на самого себя.'
+            )
+        return data
 
-    #     return Subscription.objects.filter(
-    #         author=obj, user=request.user).exists()
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -174,18 +181,3 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
-
-    def validate(self, data):
-        author_id = self.context.get(
-            'request').parser_context.get('kwargs').get('id')
-        author = get_object_or_404(User, id=author_id)
-        user = self.context.get('request').user
-        if user.following_user.filter(author=author_id).exists():
-            raise serializers.ValidationError(
-                detail='Вы уже подписаны на этого пользователя!'
-            )
-        if user == author:
-            raise serializers.ValidationError(
-                detail='Подписаться на самого себя невозможно!'
-            )
-        return data
