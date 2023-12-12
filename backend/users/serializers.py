@@ -175,6 +175,7 @@ class UserRecipesSerializer(UserSerializer):
         return serializer.data
 
     def validate(self, data):
+        request = self.context.get('request')
         if not isinstance(data.get('author', User)):
             raise serializers.ValidationError(
                 'author must be an instance of User')
