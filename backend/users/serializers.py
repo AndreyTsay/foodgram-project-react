@@ -157,13 +157,13 @@ class UserRecipesSerializer(UserSerializer):
             )
         return data
 
-    def get_is_subscribed(self, obj):
-        request = self.context.get('request')
-        if request.user.is_anonymous:
-            return False
+    # def get_is_subscribed(self, obj):
+    #     request = self.context.get('request')
+    #     if request.user.is_anonymous:
+    #         return False
 
-        return Subscription.objects.filter(
-            author=obj, user=request.user).exists()
+    #     return Subscription.objects.filter(
+    #         author=obj, user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
