@@ -176,11 +176,13 @@ class UserRecipesSerializer(UserSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        if isinstance(data.get('is_subscribed', User)):
+        if 'is_subscribed' in data and not isinstance(
+                data['is_subscribed'], User):
             raise serializers.ValidationError(
-                'author must be an instance of User')
+                'is_subscribed must be an instance of User')
+
         if request.user == data['author']:
             raise serializers.ValidationError(
-                {'error': 'Нельзя подписываться на себя.'}
-            )
+                {'error': 'Нельзя подписываться на себя.'})
+
         return data
