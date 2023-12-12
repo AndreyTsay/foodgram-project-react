@@ -73,9 +73,9 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = ValidateSubscribe(
             author, data=request.data, context={'request': request})
 
-        serializer.is_valid(raise_exception=True)
-        Subscription.objects.create(user=request.user, author=author)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        if serializer.is_valid(raise_exception=True):
+            Subscription.objects.create(user=request.user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         # if Subscription.objects.filter(
         #         user=request.user, author=author).exists():
