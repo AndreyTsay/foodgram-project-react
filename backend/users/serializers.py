@@ -180,7 +180,8 @@ class UserRecipesSerializer(UserSerializer):
         if request.user == data['author']:
             raise serializers.ValidationError(
                 {'error': 'Нельзя подписываться на себя.'})
-        if Subscription.objects.filter(user=request.user, author=data['author']).exists():
+        if Subscription.objects.filter(
+                user=request.user, author=data['author']).exists():
             raise serializers.ValidationError(
                 'Вы уже подписаны на этого пользователя.'
             )
