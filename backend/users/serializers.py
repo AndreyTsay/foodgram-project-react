@@ -155,8 +155,8 @@ class UserRecipesSerializer(UserSerializer):
     #     if request.user.is_anonymous:
     #         return False
 
-        return Subscription.objects.filter(
-            author=obj, user=request.user).exists()
+    #     return Subscription.objects.filter(
+    #         author=obj, user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
@@ -176,7 +176,7 @@ class UserRecipesSerializer(UserSerializer):
 
     def validate(self, data):
         request = self.context.get('request')
-        if isinstance(data.get('is_subscribed')):
+        if isinstance(data.get('is_subscribed', User)):
             raise serializers.ValidationError(
                 'author must be an instance of User')
         if request.user == data['author']:
