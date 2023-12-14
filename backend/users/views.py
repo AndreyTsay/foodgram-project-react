@@ -65,11 +65,11 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST'], detail=False,
+    @action(methods=['POST'], detail=True,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['pk'])
+    def subscribe(self, request, pk):
+        author = get_object_or_404(User, id=pk)
         serializer = ValidateSubscribe(author, data=request.data,
                                        context={"request": request})
 
