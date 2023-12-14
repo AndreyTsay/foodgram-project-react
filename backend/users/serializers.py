@@ -189,3 +189,26 @@ class ValidateSubscribe(serializers.ModelSerializer):
                 'Нельзя подписываться на самого себя.'
             )
         return data
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = request.GET.get('recipes_limit')
+        recipes = Recipe.objects.filter(author=obj.id)
+        if recipes_limit:
+            recipes = recipes[:int(recipes_limit)]
+        serializer = RecipeContextSerializer(
+            recipes,
+            many=True,
+            read_only=True
+        )
+        return serializer.data
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        return (request.user.is_authenticated
+                and Subscription.objects.filter(
+                    subscriber=request.user, signer=obj
+                ).exists())
+
+    def get_recipes_count(self, author):
+        return Recipe.objects.filter(author=author).count()

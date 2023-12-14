@@ -10,7 +10,8 @@ from .serializers import (
     NewPasswordSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
-    UserRegistrationSerializer
+    UserRegistrationSerializer,
+    ValidateSubscribe
 )
 
 
@@ -69,10 +70,10 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['pk'])
-        serializer = UserRecipesSerializer(author,
-                                           context={'request': request})
+        serializer = ValidateSubscribe(author, data=request.data,
+                                       context={"request": request})
 
-        # if serializer.is_valid(raise_exception=True):
+        serializer.is_valid(raise_exception=True)
         Subscription.objects.create(user=request.user, author=author)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
