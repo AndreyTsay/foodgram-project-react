@@ -201,13 +201,13 @@ class ValidateSubscribe(serializers.ModelSerializer):
             many=True,
             read_only=True
         )
-        return serializer.data
+        return serializer.datas
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         return (request.user.is_authenticated
                 and Subscription.objects.filter(
-                    subscriber=request.user, signer=obj
+                    user=request.user, author=obj
                 ).exists())
 
     def get_recipes_count(self, author):
