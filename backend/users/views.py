@@ -65,7 +65,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST'], detail=True,
+    @action(methods=['POST'], detail=False,
             url_path=r'(?P<pk>\d+)/subscribe',
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, pk):
