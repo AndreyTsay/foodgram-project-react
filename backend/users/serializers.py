@@ -1,6 +1,6 @@
 import re
 
-from rest_framework import serializers
+from rest_framework import serializers, status
 from django.contrib.auth.hashers import make_password
 
 from recipes.models import Recipe
@@ -146,9 +146,17 @@ class UserRecipesSerializer(UserSerializer):
                   'recipes_count')
 
     def validate(self, data):
-        if self.context['request'].user == data:
+        author = self.instance
+        user = self.context.get('request').user
+        if Subscription.objects.filter(author=author, user=user).exists():
             raise serializers.ValidationError(
-                'Нельзя подписываться на самого себя.'
+                detail='Посмотрите внимательно, вы уже на него подписаны!',
+                code=status.HTTP_400_BAD_REQUEST
+            )
+        if user == author:
+            raise serializers.ValidationError(
+                detail='Жаль, но вы не можете подписаться на самого себя!',
+                code=status.HTTP_400_BAD_REQUEST
             )
         return data
 
