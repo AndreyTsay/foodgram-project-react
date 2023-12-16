@@ -1,13 +1,17 @@
-from django.contrib.auth.hashers import check_password, make_password
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from recipes.pagination import RecipePagination
+
 from .models import User, Subscription
-from .pagination import CustomPaginator
+from .pagination import UsersPagination
 from .serializers import (
     NewPasswordSerializer,
+    TokenSerializer,
     UserInfoSerializer,
     UserRecipesSerializer,
     UserRegistrationSerializer
@@ -18,10 +22,10 @@ class UserViewSet(viewsets.ModelViewSet):
     """Вьюсет для регистрации пользователя, просмотра списка пользователей
     и просмотра отдельного пользователя."""
     queryset = User.objects.all()
-    pagination_class = CustomPaginator
+    pagination_class = UsersPagination
 
     def get_permissions(self):
-        if self.action in ['me', 'subscribe', 'subscriptions']:
+        if self.action in ['retrieve', 'me', 'subscribe', 'subscriptions']:
             permission_classes = [permissions.IsAuthenticated]
         else:
             permission_classes = [permissions.AllowAny]
@@ -50,13 +54,11 @@ class UserViewSet(viewsets.ModelViewSet):
     def change_password(self, request):
         """Метод, позволяющий сменить пароль."""
         user = request.user
-        serializer = NewPasswordSerializer(data=request.data,
-                                           context={'request': request})
+        serializer = NewPasswordSerializer(data=request.data)
 
         serializer.is_valid(raise_exception=True)
-        if check_password(serializer.data['current_password'],
-                          request.user.password):
-            user.password = make_password(serializer.data['new_password'])
+        if serializer.data['current_password'] == request.user.password:
+            user.password = serializer.data['new_password']
             user.save(update_fields=["password"])
             return Response('Пароль успешно изменен.',
                             status=status.HTTP_204_NO_CONTENT)
@@ -100,14 +102,39 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
             permission_classes=(permissions.IsAuthenticated,),
-            pagination_class=CustomPaginator)
+            pagination_class=RecipePagination)
     def subscriptions(self, request):
         authors = User.objects.filter(
             recipe_author__user=request.user).prefetch_related('recipes')
         page = self.paginate_queryset(authors)
 
-        serializer = UserRecipesSerializer(
-            page, many=True,
-            context={'request': request})
+        if page:
+            serializer = UserRecipesSerializer(
+                page, many=True,
+                context={'request': request})
 
-        return self.get_paginated_response(serializer.data)
+            return self.get_paginated_response(serializer.data)
+        serializer = UserRecipesSerializer(authors, many=True,
+                                           context={'request': request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class CustomAuthToken(ObtainAuthToken):
+    """Кастомный вью-класс для получения токена по username-email."""
+    permission_classes = (permissions.AllowAny,)
+    pagination_class = None
+
+    def post(self, request, *args, **kwargs):
+        serializer = TokenSerializer(data=request.data,
+                                     context={'request': request})
+
+        serializer.is_valid(raise_exception=True)
+        user = get_object_or_404(
+            User,
+            email=serializer.data.get('email')
+        )
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({
+            'auth_token': token.key,
+        })

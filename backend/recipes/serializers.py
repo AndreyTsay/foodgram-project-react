@@ -3,7 +3,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from recipes import constants
+from users import constants
 from users.models import Subscription, User
 
 from .models import (

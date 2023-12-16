@@ -1,7 +1,6 @@
+from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
 
-class CustomPaginator(PageNumberPagination):
-    """Кастомный пагинатор для вывода определенного количества страниц."""
-    page_size = 6
-    page_size_query_param = 'limit'
+class UsersPagination(PageNumberPagination):
+    page_size = settings.USER_PAGE_SIZE
