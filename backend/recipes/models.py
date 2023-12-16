@@ -2,7 +2,6 @@ from colorfield.fields import ColorField
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
-from users import constants
 from users.models import User
 
 
@@ -11,7 +10,7 @@ class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
     color = ColorField(max_length=7, unique=True)
     slug = models.SlugField(
-        max_length=constants.MAX_LENGTH_124,
+        max_length=124,
         unique=True,
     )
 
@@ -21,8 +20,8 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""
-    name = models.CharField(max_length=constants.MAX_LENGTH_124)
-    measurement_unit = models.CharField(max_length=constants.MAX_LENGTH_10)
+    name = models.CharField(max_length=124)
+    measurement_unit = models.CharField(max_length=10)
 
     class Meta:
         constraints = [
@@ -43,7 +42,7 @@ class Recipe(models.Model):
         related_name='recipes',
         on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=constants.MAX_LENGTH_254)
+    name = models.CharField(max_length=254)
     image = models.ImageField(
         upload_to='recipes/images/',
         default=None
@@ -56,8 +55,7 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(Tag, related_name='recipe_tag')
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(constants.MIN_VALUE),
-                    MaxValueValidator(constants.MAX_VALUE)]
+        validators=[MinValueValidator(1), MaxValueValidator(600)]
     )
 
     class Meta:
@@ -78,12 +76,7 @@ class IngredientsForRecipe(models.Model):
         Recipe,
         related_name='ingredient_for_recipe',
         on_delete=models.CASCADE)
-    amount = models.PositiveSmallIntegerField(
-        validators=(MinValueValidator(
-                    constants.MIN_VALUE,
-                    message='Минимальное количество ингридиентов 1'),),
-        verbose_name='Количество',
-    )
+    amount = models.PositiveIntegerField()
 
     class Meta:
         constraints = [
@@ -97,25 +90,18 @@ class IngredientsForRecipe(models.Model):
         return f'{self.recipe}: {self.ingredient}'
 
 
-class AbstractList(models.Model):
-    """Абстрактная модель для избранного и списка покупок."""
+class Favorites(models.Model):
+    """Модель для добавления рецепта в избранное."""
     user = models.ForeignKey(
         User,
-        related_name="%(app_label)s_%(class)s_related",
+        related_name='favorite_recipe',
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name="%(app_label)s_%(class)s_related",
+        related_name='favorite_recipe',
         on_delete=models.CASCADE
     )
-
-    class Meta:
-        abstract = True
-
-
-class Favorites(AbstractList):
-    """Модель для добавления рецепта в избранное."""
 
     class Meta:
         constraints = [
@@ -129,8 +115,18 @@ class Favorites(AbstractList):
         return f'Рецепт {self.recipe.name} в избранном у {self.user.username}'
 
 
-class ShoppingCart(AbstractList):
+class ShoppingCart(models.Model):
     """Модель для списка покупок."""
+    user = models.ForeignKey(
+        User,
+        related_name='shopping_cart',
+        on_delete=models.CASCADE
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        related_name='shopping_cart',
+        on_delete=models.CASCADE
+    )
 
     class Meta:
         constraints = [
@@ -142,4 +138,4 @@ class ShoppingCart(AbstractList):
 
     def __str__(self):
         return (f'Рецепт {self.recipe.name} в списке покупок'
-                f' у {self.user.username}')
+                f'у {self.user.username}')

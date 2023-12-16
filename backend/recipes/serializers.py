@@ -3,9 +3,7 @@ import base64
 from django.core.files.base import ContentFile
 from rest_framework import serializers
 
-from users import constants
 from users.models import Subscription, User
-
 from .models import (
     Favorites,
     Ingredient,
@@ -14,7 +12,6 @@ from .models import (
     ShoppingCart,
     Tag
 )
-from .utils import bulk_create_ingredients_for_recipe
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
@@ -96,7 +93,7 @@ class IngredientForRecipeSerializer(serializers.ModelSerializer):
         fields = ('id', 'amount')
 
     def validate_amount(self, value):
-        if value < constants.MIN_VALUE:
+        if value < 1:
             raise serializers.ValidationError(
                 'Укажите корректное количество ингредиентов.'
             )
@@ -133,12 +130,8 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         if request.user.is_anonymous:
             return False
 
-        recipe = obj
-        user = request.user
-
-        if ShoppingCart.objects.filter(recipe=recipe, user=user).exists():
-            return True
-        return False
+        return ShoppingCart.objects.filter(
+            recipe=obj, user=request.user).exists()
 
 
 class RecipeCreationSerializer(serializers.ModelSerializer):
@@ -161,14 +154,14 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
                   'cooking_time', 'text', 'image')
 
     def validate_name(self, value):
-        if len(value) > constants.MAX_LENGTH_200:
+        if len(value) > 200:
             raise serializers.ValidationError(
                 'Имя рецепта не может быть более 200 символов.'
             )
         return value
 
     def validate_cooking_time(self, value):
-        if value < constants.MIN_VALUE or value > constants.MAX_VALUE:
+        if value <= 0:
             raise serializers.ValidationError(
                 'Укажите корректное время приготовления.'
             )
@@ -222,13 +215,17 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
         return data
 
     def create(self, validated_data):
-        ingredients_data = validated_data.pop('ingredient_for_recipe')
-        tags_data = validated_data.pop('tags')
-
+        ingredients = validated_data.pop('ingredient_for_recipe')
+        tags = validated_data.pop('tags')
         recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags_data)
+        recipe.tags.set(tags)
 
-        bulk_create_ingredients_for_recipe(recipe, ingredients_data)
+        for ingredient in ingredients:
+            IngredientsForRecipe.objects.create(
+                ingredient_id=ingredient.get('id'),
+                recipe=recipe,
+                amount=ingredient.get('amount')
+            )
 
         return recipe
 
@@ -243,14 +240,18 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
             instance.text
         )
         instance.image = validated_data.get('image', instance.image)
-        ingredients_data = validated_data.pop('ingredient_for_recipe')
-        tags_data = validated_data.pop('tags')
-
+        ingredients = validated_data.pop('ingredient_for_recipe')
+        tags = validated_data.pop('tags')
         instance.tags.clear()
-        instance.tags.set(tags_data)
+        instance.tags.set(tags)
         instance.ingredients.clear()
-        bulk_create_ingredients_for_recipe(instance, ingredients_data)
 
+        for ingredient in ingredients:
+            IngredientsForRecipe.objects.create(
+                ingredient_id=ingredient.get('id'),
+                recipe=instance,
+                amount=ingredient.get('amount')
+            )
         instance.save()
 
         return instance

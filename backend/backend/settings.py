@@ -13,9 +13,9 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', default='127.0.0.1, localhost').split(', ')
 
-CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'False') == 'True'
+CSRF_COOKIE_SECURE = True
 
-CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS').split(', ')
+CSRF_TRUSTED_ORIGINS: list[str] = ['http://130.193.41.14', 'https://buyhelperyaproject.ddns.net', 'https://*.ddns.net']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -126,7 +126,3 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
-USER_PAGE_SIZE = 10
-
-RECIPE_PAGE_SIZE = 6

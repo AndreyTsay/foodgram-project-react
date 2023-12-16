@@ -1,6 +1,9 @@
-from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
 
 class UsersPagination(PageNumberPagination):
-    page_size = settings.USER_PAGE_SIZE
+    page_size = 10
+
+
+class RecipePagination(PageNumberPagination):
+    page_size = 6

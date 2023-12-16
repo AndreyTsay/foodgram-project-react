@@ -4,7 +4,6 @@ from djoser.serializers import UserSerializer
 from rest_framework import serializers
 
 from recipes.serializers import RecipeContextSerializer
-
 from .models import Subscription, User
 
 
@@ -29,14 +28,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         """Проверяет, что в имени не содержатся запрещенные символы и что
         оно не занято."""
         error_list = []
-        for symbol in value:
+        username = value
+        for symbol in username:
             if not re.search(r'^[\w.@+-]+$', symbol):
                 error_list.append(symbol)
         if error_list:
             raise serializers.ValidationError(
                 f'Символы {"".join(error_list)} запрещены!'
             )
-        if User.objects.filter(value=value).exists():
+        if User.objects.filter(username=value).exists():
             raise serializers.ValidationError(f"Имя {value} уже занято!")
         return value
 
@@ -105,10 +105,11 @@ class UserRecipesSerializer(UserSerializer):
 
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
-        if request.user.is_authenticated:
-            return Subscription.objects.filter(user=request.user,
-                                               author=obj).exists()
-        return False
+        if request.user.is_anonymous:
+            return False
+
+        return Subscription.objects.filter(
+            author=obj, user=request.user).exists()
 
     def get_recipes_count(self, obj):
         return obj.recipes.count()
