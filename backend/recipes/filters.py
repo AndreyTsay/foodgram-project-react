@@ -4,6 +4,7 @@ from .models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(rest_framework.FilterSet):
+    """Фильтр для поиска ингредиента по первым символам."""
     name = rest_framework.CharFilter(lookup_expr='startswith')
 
     class Meta:
@@ -12,6 +13,8 @@ class IngredientFilter(rest_framework.FilterSet):
 
 
 class RecipeFilter(rest_framework.FilterSet):
+    """Фильтр рецептов по тегам, подпискам, вхождению
+    в избранное и в список покупок."""
     author = rest_framework.NumberFilter(
         field_name='author',
         lookup_expr='exact'

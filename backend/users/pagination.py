@@ -1,9 +1,7 @@
 from rest_framework.pagination import PageNumberPagination
 
 
-class UsersPagination(PageNumberPagination):
-    page_size = 10
-
-
-class RecipePagination(PageNumberPagination):
+class CustomPaginator(PageNumberPagination):
+    """Кастомный пагинатор для вывода определенного количества страниц."""
     page_size = 6
+    page_size_query_param = 'limit'

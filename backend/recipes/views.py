@@ -1,22 +1,22 @@
-from django.db.models import F
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import permissions, status, viewsets
-from rest_framework.decorators import action
-from rest_framework.pagination import PageNumberPagination
+from django.http import HttpResponse
+from django.db.models import F
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
+from rest_framework.decorators import action
+from rest_framework.generics import get_object_or_404
 
-from .filters import IngredientFilter, RecipeFilter
-from .models import Favorites, Ingredient, Recipe, ShoppingCart, Tag
-from .permissions import IsAdminAuthorOrReadOnly
+from .models import Tag, Ingredient, Recipe, Favorites, ShoppingCart
 from .serializers import (
+    TagSerializer,
     IngredientsSerializer,
     RecipeCreationSerializer,
     RecipeGetSerializer,
-    RecipeListSerializer,
-    TagSerializer
+    RecipeContextSerializer
 )
+from .permissions import IsAdminAuthorOrReadOnly
+from .filters import IngredientFilter, RecipeFilter
+from users.pagination import CustomPaginator
 
 
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
@@ -41,23 +41,25 @@ class RecipeViewSet(viewsets.ModelViewSet):
     """Вьюсет для просмотра списка рецептов, конкретного рецепта,
     создания рецепта"""
     queryset = Recipe.objects.all()
-    pagination_class = PageNumberPagination
+    pagination_class = CustomPaginator
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
     def get_permissions(self):
-        if self.request.method == 'PATCH' or self.action == 'destroy':
+        if self.request.method == 'PATCH' or self.request.method == 'DELETE':
             permission_classes = [IsAdminAuthorOrReadOnly]
         elif self.action in ['list', 'retrieve']:
             permission_classes = [permissions.AllowAny]
+        elif self.action == 'favorite' and self.request.method == 'DELETE':
+            permission_classes = [permissions.IsAuthenticated]
         else:
             permission_classes = [permissions.IsAuthenticated]
         return [permission() for permission in permission_classes]
 
     def get_serializer_class(self):
-        if self.action in ['list', 'favorite', 'shopping_cart']:
-            return RecipeListSerializer
-        elif self.action == 'retrieve':
+        if self.action in ['favorite', 'shopping_cart']:
+            return RecipeContextSerializer
+        elif self.action in ['list', 'retrieve']:
             return RecipeGetSerializer
         elif self.action == 'download_shopping_cart':
             return None
@@ -70,7 +72,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             url_path=r'(?P<pk>\d+)/favorite',
             permission_classes=(permissions.IsAuthenticated,))
     def favorite(self, request, **kwargs):
-        recipe = Recipe.objects.get(id=kwargs['pk'])
+        recipe = get_object_or_404(Recipe, id=kwargs['pk'])
 
         if request.method == 'POST':
             if Favorites.objects.filter(
@@ -81,12 +83,11 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(data=self.get_serializer(recipe).data,
                             status=status.HTTP_201_CREATED)
 
-        if not Favorites.objects.filter(
-                user=request.user, recipe=recipe).exists():
+        favorite = Favorites.objects.filter(
+            user=request.user, recipe=recipe).first()
+        if not favorite:
             return Response('Этот рецепт еще не в списке избранного.',
                             status=status.HTTP_400_BAD_REQUEST)
-        favorite = Favorites.objects.get(
-            user=request.user, recipe=recipe)
         favorite.delete()
         return Response(data=self.get_serializer(recipe).data,
                         status=status.HTTP_204_NO_CONTENT)
@@ -106,13 +107,12 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response(data=self.get_serializer(recipe).data,
                             status=status.HTTP_201_CREATED)
 
-        if not ShoppingCart.objects.filter(
-                user=request.user, recipe=recipe).exists():
+        shopping_cart = ShoppingCart.objects.filter(
+            user=request.user, recipe=recipe).first()
+        if not shopping_cart:
             return Response(
                 'Вы не добавляли этот рецепт в список покупок.',
                 status=status.HTTP_400_BAD_REQUEST)
-        shopping_cart = ShoppingCart.objects.get(
-            user=request.user, recipe=recipe)
         shopping_cart.delete()
         return Response(data=self.get_serializer(recipe).data,
                         status=status.HTTP_204_NO_CONTENT)

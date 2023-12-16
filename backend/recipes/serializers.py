@@ -1,21 +1,22 @@
 import base64
 
-from django.core.files.base import ContentFile
 from rest_framework import serializers
+from django.core.files.base import ContentFile
 
-from users.models import Subscription, User
+from users.models import User, Subscription
 from .models import (
-    Favorites,
+    Tag,
     Ingredient,
     IngredientsForRecipe,
     Recipe,
-    ShoppingCart,
-    Tag
+    Favorites,
+    ShoppingCart
 )
 
 
 class UserInfoSerializer(serializers.ModelSerializer):
     """Сериализатор для просмотра профилей пользователей."""
+    # Вынесен из модуля users с целью предотвращения циклического импорта.
     is_subscribed = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -35,6 +36,7 @@ class UserInfoSerializer(serializers.ModelSerializer):
 class UserShortInfoSerializer(serializers.ModelSerializer):
     """Сериализатор для краткого отображения пользователя на главной странице
     рецептов."""
+    # Вынесен из модуля users с целью предотвращения циклического импорта.
     class Meta:
         model = User
         fields = ('id', 'first_name', 'last_name')
@@ -156,21 +158,28 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
     def validate_name(self, value):
         if len(value) > 200:
             raise serializers.ValidationError(
-                'Имя рецепта не может быть более 200 символов.'
+                'имя рецепта не должно превышать 200 символов.'
             )
         return value
 
     def validate_cooking_time(self, value):
         if value <= 0:
             raise serializers.ValidationError(
-                'Укажите корректное время приготовления.'
+                'Введите корректное время приготовления.'
+            )
+        return value
+
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                {'Ошибка': 'К рецепту необходимо добавить фото.'}
             )
         return value
 
     def validate(self, data):
         """Валидация создания рецепта - проверяет наличие
         ингредиентов, изображения и тегов."""
-        ingredients = self.initial_data.get('ingredients')
+        ingredients = data.get('ingredient_for_recipe')
         ingredients_list = []
         if not ingredients:
             raise serializers.ValidationError(
@@ -178,8 +187,8 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
             )
         for ingredient in ingredients:
 
-            value = Ingredient.objects.filter(id=ingredient['id'])
-            if not value.exists():
+            ingredient_id = ingredient.get('id')
+            if not Ingredient.objects.filter(id=ingredient_id).exists():
                 raise serializers.ValidationError(
                     {'Ошибка': 'Такого ингредиента не существует.'}
                 )
@@ -187,13 +196,13 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(
                     'Укажите корректное количество ингредиентов.'
                 )
-            if value in ingredients_list:
+            if ingredient_id in ingredients_list:
                 raise serializers.ValidationError(
-                    'Ингредиенты не должны повторяться.'
+                    {'Ошибка': 'Ингредиенты не должны повторяться.'}
                 )
-            ingredients_list.append(value)
+            ingredients_list.append(ingredient_id)
 
-        tags = self.initial_data.get('tags')
+        tags = data.get('tags')
         if not tags:
             raise serializers.ValidationError(
                 "Необходимо указать хотя бы один тег."
@@ -203,15 +212,10 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
 
             if tag in tags_list:
                 raise serializers.ValidationError(
-                    'Теги не должны повторяться.'
+                    {'Ошибка': 'Теги не должны повторяться.'}
                 )
             tags_list.append(tag)
 
-        image = self.initial_data.get('image')
-        if not image:
-            raise serializers.ValidationError(
-                "К рецепту необходимо добавить изображение."
-            )
         return data
 
     def create(self, validated_data):
@@ -239,7 +243,6 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
             'text',
             instance.text
         )
-        instance.image = validated_data.get('image', instance.image)
         ingredients = validated_data.pop('ingredient_for_recipe')
         tags = validated_data.pop('tags')
         instance.tags.clear()
