@@ -69,23 +69,18 @@ class UserViewSet(viewsets.ModelViewSet):
             permission_classes=(permissions.IsAuthenticated,))
     def subscribe(self, request, **kwargs):
         author = get_object_or_404(User, id=kwargs['id'])
-        serializer = UserRecipesSerializer(author, data=request.data,
-                                           context={"request": request})
-
         if request.method == 'POST':
+            serializer = UserRecipesSerializer(
+                author, data=request.data, context={'request': request})
             serializer.is_valid(raise_exception=True)
             Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        subscription = Subscription.objects.filter(
-            user=request.user, author=author).first()
-        if not subscription:
-            return Response('Вы не подписаны на этого пользователя.',
-                            status=status.HTTP_400_BAD_REQUEST)
-        subscription.delete()
-        return Response(serializer.data,
-                        status=status.HTTP_204_NO_CONTENT)
+        if request.method == 'DELETE':
+            get_object_or_404(
+                Subscription, user=request.user, author=author).delete()
+            return Response({'detail': 'Успешная отписка'},
+                            status=status.HTTP_204_NO_CONTENT)
 
     @action(methods=['GET'], detail=False,
             url_path='subscriptions',
