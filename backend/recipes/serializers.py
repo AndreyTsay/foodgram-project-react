@@ -5,21 +5,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework.validators import UniqueTogetherValidator
 from tags.models import Tag
+from tags.serializers import TagSerializer
 from users.serializers import CustomUserSerializer
-
-
-class TagSerializer(serializers.ModelSerializer):
-    """Сериализатор тэгов."""
-
-    class Meta:
-        model = Tag
-        fields = (
-            "id",
-            "name",
-            "color",
-            "slug",
-        )
-        extra_kwargs = {"url": {"lookup_field": "id"}}
 
 
 class IngredientSerializer(serializers.ModelSerializer):

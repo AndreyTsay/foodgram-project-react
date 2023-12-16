@@ -13,17 +13,7 @@ from .filters import IngredientSearchFilter, RecipeFilter
 from .models import (FavoriteRecipe, Ingredient, Recipe, RecipeIngredient,
                      ShoppingCart)
 from .serializers import (FavoriteRecipeSerializer, IngredientSerializer,
-                          ShoppingCartSerializer, TagSerializer)
-
-
-from .models import Tag
-
-
-class TagViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Tag.objects.all()
-    serializer_class = TagSerializer
-    pagination_class = None
-    permission_classes = (IsAdminOrReadOnly,)
+                          ShoppingCartSerializer)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):

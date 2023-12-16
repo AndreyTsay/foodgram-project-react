@@ -1,34 +1,10 @@
-from colorfield.fields import ColorField
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
-
+from tags.models import Tag
 from users.models import User
 
-
-class Tag(models.Model):
-    """Тэг."""
-
-    name = models.CharField(
-        max_length=20,
-        verbose_name="Название тэга",
-    )
-
-    color = ColorField(
-        max_length=7, default="#ffffff", unique=True, verbose_name="Цвет тэга"
-    )
-
-    slug = models.SlugField(
-        max_length=20,
-        unique=True,
-        verbose_name="Идентификатор тэга",
-    )
-
-    class Meta:
-        verbose_name = "Тэг"
-        verbose_name_plural = "Тэги"
-
-    def __str__(self):
-        return self.name
+User = get_user_model()
 
 
 class Ingredient(models.Model):
