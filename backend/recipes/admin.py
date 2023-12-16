@@ -1,30 +1,33 @@
 from django.contrib import admin
-from django.db.models import Count
 
-from .models import Favorite, Follow, Ingredient, Recipe, ShoppingList, Tag
+from .models import Ingredient, Recipe, Tag
 
 
-class RecipeAdmin(admin.ModelAdmin):
-    list_filter = ('author', 'name', 'tags')
-    list_display = ('name', 'author', 'get_favorite_count')
-
-    def get_queryset(self, request):
-        queryset = super().get_queryset(request)
-        return queryset.annotate(favorite_count=Count('favorite_recipe'))
-
-    @staticmethod
-    def get_favorite_count(obj):
-        return obj.favorite_count
+class TagAdmin(admin.ModelAdmin):
+    list_display = ('name', 'color', 'slug',)
+    search_fields = ('name',)
+    list_filter = ('name',)
+    empty_value_display = '-пусто-'
 
 
 class IngredientAdmin(admin.ModelAdmin):
-    list_filter = ('name', )
-    list_display = ('name', 'measurement_unit')
+    list_display = ('name', 'measurement_unit',)
+    search_fields = ('name',)
+    list_filter = ('name',)
+    empty_value_display = '-пусто-'
 
 
-admin.site.register(Follow)
-admin.site.register(Tag)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ('name', 'author', 'in_favorites',)
+    search_fields = ('name',)
+    list_filter = ('name', 'author',)
+    empty_value_display = '-пусто-'
+
+    @admin.display(description='Добавления в избранное')
+    def in_favorites(self, obj):
+        return obj.favorite_recipe.count()
+
+
+admin.site.register(Tag, TagAdmin)
 admin.site.register(Ingredient, IngredientAdmin)
 admin.site.register(Recipe, RecipeAdmin)
-admin.site.register(Favorite)
-admin.site.register(ShoppingList)
