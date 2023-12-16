@@ -145,6 +145,13 @@ class UserRecipesSerializer(UserSerializer):
                   'last_name', 'is_subscribed', 'recipes',
                   'recipes_count')
 
+    def validate(self, data):
+        if self.context['request'].user == data:
+            raise serializers.ValidationError(
+                'Нельзя подписываться на самого себя.'
+            )
+        return data
+
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user.is_anonymous:
