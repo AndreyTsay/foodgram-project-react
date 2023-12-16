@@ -1,19 +1,30 @@
-from rest_framework.permissions import SAFE_METHODS, BasePermission
+from rest_framework import permissions
 
 
-class IsOwnerOrReadOnly(BasePermission):
+class IsAdminOrReadOnly(permissions.BasePermission):
+    """Разрешено администратору или только для чтения"""
+
+    def has_permission(self, request, view):
+        return request.method in permissions.SAFE_METHODS or (
+            request.user.is_authenticated
+            and (request.user.is_admin or request.user.is_superuser)
+        )
+
+
+class IsAdminAuthorOrReadOnly(permissions.BasePermission):
+    """Разрешено автору или администратору, остальные только для чтения"""
+
     def has_object_permission(self, request, view, obj):
-        return request.method in SAFE_METHODS or obj.author == request.user
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_admin
+            or request.user.is_moderator
+            or request.user.is_superuser
+            or obj.author == request.user
+        )
 
-
-class IsAdminOrReadOnly(BasePermission):
     def has_permission(self, request, view):
-        return (request.method in SAFE_METHODS
-                or request.user and request.user.is_staff)
-
-
-class AuthUserDelete(BasePermission):
-    def has_permission(self, request, view):
-        if request.method == 'DELETE':
-            return request.user.is_authenticated
-        return True
+        return (
+            request.method in permissions.SAFE_METHODS
+            or request.user.is_authenticated
+        )

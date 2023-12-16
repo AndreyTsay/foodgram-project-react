@@ -1,57 +1,104 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
-from django.utils.translation import gettext_lazy as _
-
-from users import constants
 
 
 class User(AbstractUser):
-    """Кастомная модель пользователя."""
+    """Пользователь."""
+
+    USER = "user"
+    MODERATOR = "moderator"
+    ADMIN = "admin"
+    ROLES = {
+        (USER, "user"),
+        (MODERATOR, "moderator"),
+        (ADMIN, "admin"),
+    }
+
     email = models.EmailField(
-        _('email address'),
-        max_length=constants.MAX_EMAIL_LENGTH,
+        verbose_name="Электронная почта",
         unique=True,
-        null=False
+        max_length=254,
+    )
+    username = models.CharField(
+        verbose_name="Имя пользователя",
+        unique=True,
+        max_length=150,
     )
     first_name = models.CharField(
-        _('first name'),
-        max_length=constants.MAX_FIRST_NAME_LENGTH
+        verbose_name="Имя", max_length=150, blank=True
     )
     last_name = models.CharField(
-        _('last name'),
-        max_length=constants.MAX_LAST_NAME_LENGTH
+        verbose_name="Фамилия", max_length=150, blank=True
     )
-    password = models.CharField(max_length=constants.MAX_LENGTH_PASSWORD)
+    bio = models.TextField(
+        verbose_name="О себе",
+        blank=True,
+    )
+    joined_date = models.DateTimeField(
+        verbose_name="Дата регистрации",
+        auto_now_add=True,
+    )
+    password = models.CharField(
+        verbose_name="Пароль",
+        max_length=150,
+        help_text="Введите пароль",
+    )
+
+    role = models.CharField(
+        verbose_name="Статус",
+        max_length=20,
+        choices=ROLES,
+        default=USER,
+    )
+
+    REQUIRED_FIELDS = [
+        "email",
+        "first_name",
+        "last_name",
+        "password",
+    ]
 
     class Meta:
-        ordering = ['-email']
+        verbose_name = "Пользователь"
+        verbose_name_plural = "Пользователи"
+        ordering = ["id"]
 
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
+    def __str__(self):
+        return self.username
+
+    @property
+    def is_moderator(self):
+        return self.is_staff or self.role == self.MODERATOR
+
+    @property
+    def is_admin(self):
+        return self.is_superuser or self.role == self.ADMIN
 
 
-class Subscription(models.Model):
-    "Модель подписок пользователей на авторов рецептов."
+class Follow(models.Model):
     user = models.ForeignKey(
         User,
-        null=True,
         on_delete=models.CASCADE,
-        related_name='following_user',
+        related_name="follower",
+        verbose_name="Подписчик",
     )
     author = models.ForeignKey(
         User,
-        null=True,
         on_delete=models.CASCADE,
-        related_name='recipe_author'
+        related_name="following",
+        verbose_name="Автор",
     )
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'author'],
-                                    name='unique_subscription'),
-            models.CheckConstraint(check=~models.Q(user=models.F('author')),
-                                   name='no_self_subscription')
-        ]
+        constraints = (
+            models.UniqueConstraint(
+                fields=(
+                    "user",
+                    "author",
+                ),
+                name="unique_follow",
+            ),
+        )
 
     def __str__(self):
-        return f'{self.user.username} подписан на {self.author.username}'
+        return f"{self.user} подписан на {self.author}"
