@@ -8,11 +8,10 @@ from users.models import User
 
 class Tag(models.Model):
     """Модель тегов."""
-    name = models.CharField(
-        max_length=constants.TAG_NAME_LENGHT, unique=True)
-    color = ColorField(max_length=constants.TAG_COLOR_LENGHT, unique=True)
+    name = models.CharField(max_length=50, unique=True)
+    color = ColorField(max_length=7, unique=True)
     slug = models.SlugField(
-        max_length=constants.TAG_SLUG_LENGHT,
+        max_length=constants.MAX_LENGTH_124,
         unique=True,
     )
 
@@ -22,9 +21,8 @@ class Tag(models.Model):
 
 class Ingredient(models.Model):
     """Модель ингредиентов."""
-    name = models.CharField(max_length=constants.INGREDIENT_NAME_LENGTH)
-    measurement_unit = models.CharField(
-        max_length=constants.INGREDIENT_MEASUREMENT_LENGTH)
+    name = models.CharField(max_length=constants.MAX_LENGTH_124)
+    measurement_unit = models.CharField(max_length=constants.MAX_LENGTH_10)
 
     class Meta:
         constraints = [
@@ -45,7 +43,7 @@ class Recipe(models.Model):
         related_name='recipes',
         on_delete=models.CASCADE
     )
-    name = models.CharField(max_length=constants.MAX_RECIPE_NAME_LENGTH)
+    name = models.CharField(max_length=constants.MAX_LENGTH_254)
     image = models.ImageField(
         upload_to='recipes/images/',
         default=None
@@ -58,8 +56,8 @@ class Recipe(models.Model):
     )
     tags = models.ManyToManyField(Tag, related_name='recipe_tag')
     cooking_time = models.PositiveIntegerField(
-        validators=[MinValueValidator(constants.COOKING_TIME_MIN_VALUE),
-                    MaxValueValidator(constants.COOKING_TIME_MAX_VALUE)]
+        validators=[MinValueValidator(constants.MIN_VALUE),
+                    MaxValueValidator(constants.MAX_VALUE)]
     )
 
     class Meta:
@@ -82,7 +80,7 @@ class IngredientsForRecipe(models.Model):
         on_delete=models.CASCADE)
     amount = models.PositiveSmallIntegerField(
         validators=(MinValueValidator(
-                    constants.AMOUNT_MIN_VALUE,
+                    constants.MIN_VALUE,
                     message='Минимальное количество ингридиентов 1'),),
         verbose_name='Количество',
     )

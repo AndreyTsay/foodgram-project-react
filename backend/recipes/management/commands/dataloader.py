@@ -19,15 +19,13 @@ class Command(BaseCommand):
                     encoding='utf-8',
             ) as file:
                 reader = csv.DictReader(file)
-                objects_to_create = []
+
                 for data in reader:
-                    objects_to_create.append(
-                        model(
-                            name=data['name'],
-                            measurement_unit=data['measurement_unit']
-                        )
+                    model.objects.get_or_create(
+                        name=data['name'],
+                        measurement_unit=data['measurement_unit']
                     )
-                model.objects.bulk_create(objects_to_create)
+
         self.stdout.write(self.style.SUCCESS('Successfully loaded data'))
 
     def handle(self, *args, **options):

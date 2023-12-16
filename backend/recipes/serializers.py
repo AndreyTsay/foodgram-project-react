@@ -126,12 +126,7 @@ class RecipeGetSerializer(serializers.ModelSerializer):
         if request.user.is_anonymous:
             return False
 
-        recipe = obj
-        user = request.user
-
-        if Favorites.objects.filter(recipe=recipe, user=user).exists():
-            return True
-        return False
+        return Favorites.objects.filter(recipe=obj, user=request.user).exists()
 
     def get_is_in_shopping_cart(self, obj):
         request = self.context.get('request')
@@ -166,15 +161,14 @@ class RecipeCreationSerializer(serializers.ModelSerializer):
                   'cooking_time', 'text', 'image')
 
     def validate_name(self, value):
-        if len(value) > constants.MAX_RECIPE_NAME_LENGTH:
+        if len(value) > constants.MAX_LENGTH_200:
             raise serializers.ValidationError(
-                'Имя рецепта не может быть более 254 символов.'
+                'Имя рецепта не может быть более 200 символов.'
             )
         return value
 
     def validate_cooking_time(self, value):
-        if value < constants.COOKING_TIME_MIN_VALUE or (
-                value > constants.COOKING_TIME_MAX_VALUE):
+        if value < constants.MIN_VALUE or value > constants.MAX_VALUE:
             raise serializers.ValidationError(
                 'Укажите корректное время приготовления.'
             )
