@@ -73,10 +73,10 @@ class UserViewSet(viewsets.ModelViewSet):
                                            context={"request": request})
 
         if request.method == 'POST':
-            serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data,
-                            status=status.HTTP_201_CREATED)
+            if not serializer.is_valid(raise_exception=True):
+                Subscription.objects.create(user=request.user, author=author)
+                return Response(serializer.data,
+                                status=status.HTTP_201_CREATED)
 
         subscription = Subscription.objects.filter(
             user=request.user, author=author).first()
