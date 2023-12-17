@@ -1,61 +1,91 @@
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.utils.translation import gettext_lazy as _
-from django.db.models import F, Q
+from django.contrib.auth.validators import UnicodeUsernameValidator
+from django.core.exceptions import ValidationError
+from django.db import models
 
 
 class User(AbstractUser):
-    """Кастомная модель пользователя."""
+    REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
+    USERNAME_FIELD = 'email'
+    username_validator = UnicodeUsernameValidator()
     email = models.EmailField(
-        _('email address'),
-        max_length=254,
+        verbose_name='адрес электронной почты',
+        blank=False,
         unique=True,
-        null=False
+        max_length=254,
+        error_messages={
+            'unique': 'Такой адрес электронной почты уже зарегистрирован.'
+        },
     )
-    first_name = models.CharField(
-        _('first name'),
-        max_length=150
+    username = models.CharField(
+        verbose_name='логин',
+        max_length=150,
+        unique=True,
+        help_text='Не более 150 символов.',
+        validators=[username_validator],
+        error_messages={
+            'unique': 'Пользователь с таким именем уже зарегистрирован.'
+        },
     )
-    last_name = models.CharField(
-        _('last name'),
-        max_length=150
-    )
-    password = models.CharField(max_length=150)
+    first_name = models.CharField(verbose_name='имя', max_length=150)
+    last_name = models.CharField(verbose_name='фамилия', max_length=150)
+    is_superuser = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs):
+        if self.username == 'me':
+            return ValidationError('Username не может быть "me".')
+        return super().save(*args, **kwargs)
+
+    @property
+    def is_admin(self):
+        return self.is_superuser
+
+    def get_full_name(self):
+        return f'{self.first_name} + {self.last_name}'
+
+    def get_short_name(self):
+        return f'{self.username[:15]}'
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=['username', 'email'],
-                name='unique_user'
+        ordering = ('username',)
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        constraints = (
+            models.CheckConstraint(
+                check=~models.Q(username='me'),
+                name='Пользователь не может быть назван me!',
             ),
-        ]
+        )
 
     def __str__(self):
         return self.username
 
 
-class Subscription(models.Model):
-    "Модель подписок пользователей на авторов рецептов."
+class Follow(models.Model):
     user = models.ForeignKey(
         User,
-        null=True,
         on_delete=models.CASCADE,
-        related_name='following_user',
+        related_name='follower',
+        verbose_name='Подписчик',
     )
     author = models.ForeignKey(
         User,
-        null=True,
         on_delete=models.CASCADE,
-        related_name='recipe_author'
+        related_name='following',
+        verbose_name='Автор'
     )
 
     class Meta:
-        constraints = [
-            models.UniqueConstraint(fields=['user', 'author'],
-                                    name='unique_subscription'),
-            models.CheckConstraint(check=~Q(user=F('author')),
-                                   name='no_self_subscription')
-        ]
-
-    def __str__(self):
-        return f'{self.user.username} подписан на {self.author.username}'
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+        constraints = (
+            models.UniqueConstraint(
+                fields=('user', 'author'),
+                name='unique_user_follow'
+            ),
+            models.CheckConstraint(
+                check=~models.Q(author=models.F('user')),
+                name='Пользователь не может подписаться на самого себя',
+            ),
+        )

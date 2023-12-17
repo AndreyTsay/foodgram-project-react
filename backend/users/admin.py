@@ -1,21 +1,30 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-
-from .models import User, Subscription
+from users.models import Follow, User
 
 
-class CustomUserAdmin(UserAdmin):
-    list_display = ('email', 'username', 'first_name',
-                    'last_name',)
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    list_display = (
+        'id', 'email', 'username', 'first_name', 'last_name', 'is_superuser',
+        'is_active', 'date_joined'
+    )
+    list_filter = ('email', 'username')
+    list_display_links = ('username',)
     search_fields = ('username',)
-    empty_value_display = '-пусто-'
+    fieldsets = (
+        (None, {'fields': ('username', 'first_name', 'last_name', 'email')}),
+        ('Права', {'fields': ('is_staff', 'is_active')})
+    )
+    add_fieldsets = (
+        (None, {'fields': (
+            'username', 'first_name', 'last_name', 'email',
+            'password1', 'password2', 'is_staff', 'is_active'
+        )})
+    )
 
 
-class SubscriptionAdmin(admin.ModelAdmin):
-    list_display = ('user', 'author',)
-    search_fields = ('user', 'author',)
-    empty_value_display = '-пусто-'
-
-
-admin.site.register(User, CustomUserAdmin)
-admin.site.register(Subscription, SubscriptionAdmin)
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'author')
+    list_display_links = ('user',)
+    search_fields = ('user',)
