@@ -207,3 +207,43 @@ class FollowRecipeSerializer(serializers.ModelSerializer):
             'image',
             'cooking_time'
         )
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Favorite
+        fields = ('user', 'recipe')
+
+    def validate(self, value):
+        request = self.context.get('request')
+        recipe = value['recipe']
+        if Favorite.objects.filter(user=request.user,
+                                   recipe=recipe).exists():
+            raise serializers.ValidationError('Рецепт уже в избранном')
+        return value
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return FollowRecipeSerializer(instance.recipe,
+                                      context=context).data
+
+
+class ShoppingCartSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ShoppingCart
+        fields = ('user', 'recipe')
+
+    def validate(self, value):
+        request = self.context.get('request')
+        recipe = value['recipe']
+        if ShoppingCart.objects.filter(user=request.user,
+                                       recipe=recipe).exists():
+            raise serializers.ValidationError('Рецепт уже в списке покупок')
+        return value
+
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        context = {'request': request}
+        return FollowRecipeSerializer(instance.recipe,
+                                      context=context).data
