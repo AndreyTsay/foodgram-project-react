@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'djoser',
     'recipes.apps.RecipesConfig',
     'users.apps.UsersConfig',
-
+    'colorfield',
 ]
 
 MIDDLEWARE = [
