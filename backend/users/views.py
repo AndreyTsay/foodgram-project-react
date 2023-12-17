@@ -9,7 +9,8 @@ from .serializers import (
     UserRegistrationSerializer,
     UserInfoSerializer,
     NewPasswordSerializer,
-    UserRecipesSerializer,
+    SubscribeCreateSerializer,
+    UserRecipesSerializer
 )
 
 
@@ -69,7 +70,7 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def subscribe(self, request, id=None):
-        serializer = UserRecipesSerializer(
+        serializer = SubscribeCreateSerializer(
             data={'user': request.user.id, 'author': id},
             context={'request': request})
         serializer.is_valid(raise_exception=True)
