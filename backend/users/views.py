@@ -80,7 +80,7 @@ class UserViewSet(viewsets.ModelViewSet):
             elif request.user == author:
                 return Response('Нельзя подписаться на самого себя.',
                                 status=status.HTTP_400_BAD_REQUEST)
-            serializer.is_valid(raise_exception=True)
+            # serializer.is_valid(raise_exception=True)
             Subscription.objects.create(user=request.user, author=author)
             return Response(serializer.data,
                             status=status.HTTP_201_CREATED)
