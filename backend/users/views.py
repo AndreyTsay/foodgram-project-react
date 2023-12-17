@@ -64,35 +64,39 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response('Неверный текущий пароль.',
                         status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['POST', 'DELETE'], detail=False,
-            url_path=r'(?P<pk>\d+)/subscribe',
-            permission_classes=(permissions.IsAuthenticated,))
-    def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, id=kwargs['id'])
-        if request.method == 'POST':
-            serializer = UserRecipesSerializer(
-                author, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            Subscription.objects.create(user=request.user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        if request.method == 'DELETE':
-            get_object_or_404(
-                Subscription, user=request.user, author=author).delete()
-            return Response({'detail': 'Успешная отписка'},
-                            status=status.HTTP_204_NO_CONTENT)
-
-    @action(methods=['GET'], detail=False,
-            url_path='subscriptions',
-            permission_classes=(permissions.IsAuthenticated,),
-            pagination_class=CustomPaginator)
-    def subscriptions(self, request):
-        authors = User.objects.filter(
-            recipe_author__user=request.user).prefetch_related('recipes')
-        page = self.paginate_queryset(authors)
-
+    @action(
+        detail=True,
+        methods=['post'],
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def subscribe(self, request, id=None):
         serializer = UserRecipesSerializer(
-            page, many=True,
+            data={'user': request.user.id, 'author': id},
             context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    @subscribe.mapping.delete
+    def delete_subscribe(self, request, id=None):
+        subscription = Subscription.objects.filter(
+            user=request.user, author=id)
+        if subscription.exists():
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {'error': 'Ошибка! Вы не подписаны на этого пользователя'},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    @action(detail=False, methods=['get'],
+            permission_classes=[permissions.IsAuthenticated])
+    def subscriptions(self, request):
+        subscriptions = User.objects.filter(
+            author__user=request.user
+        )
+        page = self.paginate_queryset(subscriptions)
+        serializer = UserRecipesSerializer(
+            page, many=True, context={'request': request}
+        )
         return self.get_paginated_response(serializer.data)

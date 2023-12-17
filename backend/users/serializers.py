@@ -145,21 +145,6 @@ class UserRecipesSerializer(UserSerializer):
                   'last_name', 'is_subscribed', 'recipes',
                   'recipes_count')
 
-    def validate(self, data):
-        author = self.instance
-        user = self.context.get('request').user
-        if Subscription.objects.filter(author=author, user=user).exists():
-            raise serializers.ValidationError(
-                detail='Посмотрите внимательно, вы уже на него подписаны!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        if user == author:
-            raise serializers.ValidationError(
-                detail='Жаль, но вы не можете подписаться на самого себя!',
-                code=status.HTTP_400_BAD_REQUEST
-            )
-        return data
-
     def get_is_subscribed(self, obj):
         request = self.context.get('request')
         if request.user.is_anonymous:
@@ -183,3 +168,31 @@ class UserRecipesSerializer(UserSerializer):
             read_only=True
         )
         return serializer.data
+
+
+class SubscribeCreateSerializer(serializers.ModelSerializer):
+    """Serializer for subscription creating."""
+    class Meta:
+        model = Subscription
+        fields = ('user', 'author')
+
+    def validate(self, data):
+        user_id = data.get('user').id
+        author_id = data.get('author').id
+        if Subscription.objects.filter(
+                author=author_id, user=user_id).exists():
+            raise serializers.ValidationError(
+                detail='Ошибка! Вы уже подписаны на этого пользователя!',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        if user_id == author_id:
+            raise serializers.ValidationError(
+                detail='Ошибка! Вы не можете подписаться на самого себя!',
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        return data
+
+    def to_representation(self, instance):
+        return UserRecipesSerializer(
+            instance.author, context=self.context
+        ).data
