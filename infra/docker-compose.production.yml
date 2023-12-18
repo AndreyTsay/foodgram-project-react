@@ -34,7 +34,7 @@ services:
       - '9090:80'
     volumes:
       - ../frontend/build:/usr/share/nginx/html/ 
-      - static:/static/
+      - static:/staticfiles/ 
       - media:/media/
     depends_on:
       - frontend
