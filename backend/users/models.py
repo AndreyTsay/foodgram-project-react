@@ -3,7 +3,7 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 from django.db import models
 
-from recipes import constants
+from users import constants
 
 
 class User(AbstractUser):
