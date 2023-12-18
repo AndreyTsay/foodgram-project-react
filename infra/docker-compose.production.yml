@@ -33,7 +33,8 @@ services:
     ports:
       - '9090:80'
     volumes:
-      - ./docs/:/usr/share/nginx/html/api/docs/
+      - static:/backend_static/
+      - media:/media/
     depends_on:
       - frontend
       - db
