@@ -119,21 +119,15 @@ class AbstractList(models.Model):
     """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
-        related_name="%(class)s_user",
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name="%(class)s_recipe",
         on_delete=models.CASCADE
     )
 
     class Meta:
         abstract = True
-        ordering = ('user',)
-
-    def __str__(self):
-        return f'{self.user} - {self.recipe}'
 
 
 class Favorite(AbstractList):
