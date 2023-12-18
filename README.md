@@ -11,6 +11,10 @@ ___
 ## PROJECT DESCRIPTION
 
 The Foodgram project allows users to share cooking recipes by posting them on a shared blog. The functionality for unauthorized users is limited to viewing all recipes and detailed information about each one. It can be expanded by registering a user on the site. The functionality for authorized users is much more extensive. In addition to the above, they can: create recipes, view the pages of recipe authors and subscribe to them, add recipes to the favorites list and to the shopping list with the ability to download the resulting list as a separate file.
+
+Project website - https://buyhelperyaproject.ddns.net
+
+Login/password from the admin area: bb@mail.ru/bb
 ___
 
 ## TECH
@@ -37,7 +41,7 @@ ___
 **Set up a remote server with Ubuntu**
 
 ##### Launching a project from images from Docker pub #####
-To start, you need to create a project folder, for example, kittygram, and go to it:
+To start, you need to create a project folder, for example, foodgram, and go to it:
 
 mkdir foodgram
 cd foodgram

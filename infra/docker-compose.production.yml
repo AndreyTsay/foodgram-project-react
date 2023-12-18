@@ -21,11 +21,16 @@ services:
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/staticfiles/
       - media:/media/
+    depends_on:
+      - frontend
   db:
     image: postgres:13.10
     env_file: .env
     volumes:
       - db:/var/lib/postgresql/data
+    depends_on:
+      - nginx
+      - frontend
   backend:
     image: andreytsay/foodgram_backend
     env_file: .env
@@ -33,4 +38,6 @@ services:
       - static:/backend_static/
       - media:/media/
     depends_on:
+      - frontend
+      - nginx
       - db
