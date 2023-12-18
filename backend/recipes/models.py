@@ -119,12 +119,12 @@ class AbstractList(models.Model):
     """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
-        related_name="Пользователь избранного рецепта",
+        related_name="Пользователь",
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name="Избранный рецепт",
+        related_name="Рецепт",
         on_delete=models.CASCADE
     )
 
@@ -141,7 +141,7 @@ class Favorite(AbstractList):
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
-        default_related_name = 'favorites'
+        default_related_name = 'favorites_recipe'
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
