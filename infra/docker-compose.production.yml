@@ -11,6 +11,23 @@ services:
     image: andreytsay/foodgram_frontend
     volumes:
       - ../frontend/:/app/result_build/
+
+  db:
+    image: postgres:13.10
+    env_file: .env
+    volumes:
+      - db:/var/lib/postgresql/data
+    depends_on:
+      - frontend
+  backend:
+    image: andreytsay/foodgram_backend
+    env_file: .env
+    volumes:
+      - static:/backend_static/
+      - media:/media/
+    depends_on:
+      - frontend
+      - db
   nginx:
     image: nginx:1.19.3
     ports:
@@ -23,21 +40,5 @@ services:
       - media:/media/
     depends_on:
       - frontend
-  db:
-    image: postgres:13.10
-    env_file: .env
-    volumes:
-      - db:/var/lib/postgresql/data
-    depends_on:
-      - nginx
-      - frontend
-  backend:
-    image: andreytsay/foodgram_backend
-    env_file: .env
-    volumes:
-      - static:/backend_static/
-      - media:/media/
-    depends_on:
-      - frontend
-      - nginx
       - db
+      - backend
