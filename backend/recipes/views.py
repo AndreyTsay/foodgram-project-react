@@ -11,9 +11,11 @@ from recipes.models import (
 )
 from recipes.permissions import IsAuthenticatedOwnerOrReadOnly
 from recipes.serializers import (
+    FavoriteSerializer,
     IngredientSerializer,
-    RecipeSerializer, TagSerializer, ShoppingCartSerializer,
-    FavoriteSerializer
+    RecipeSerializer,
+    ShoppingCartSerializer,
+    TagSerializer
 )
 from recipes.utils import download_pdf
 

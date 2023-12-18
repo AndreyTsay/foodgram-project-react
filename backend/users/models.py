@@ -3,6 +3,8 @@ from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from recipes import constants
+
 
 class User(AbstractUser):
     REQUIRED_FIELDS = ('username', 'first_name', 'last_name')
@@ -12,14 +14,14 @@ class User(AbstractUser):
         verbose_name='адрес электронной почты',
         blank=False,
         unique=True,
-        max_length=254,
+        max_length=constants.MAX_EMAIL_LENGTH,
         error_messages={
             'unique': 'Такой адрес электронной почты уже зарегистрирован.'
         },
     )
     username = models.CharField(
         verbose_name='логин',
-        max_length=150,
+        max_length=constants.MAX_LENGTH_USERNAME,
         unique=True,
         help_text='Не более 150 символов.',
         validators=[username_validator],
@@ -27,8 +29,10 @@ class User(AbstractUser):
             'unique': 'Пользователь с таким именем уже зарегистрирован.'
         },
     )
-    first_name = models.CharField(verbose_name='имя', max_length=150)
-    last_name = models.CharField(verbose_name='фамилия', max_length=150)
+    first_name = models.CharField(
+        verbose_name='имя', max_length=constants.MAX_FIRST_NAME_LENGTH)
+    last_name = models.CharField(
+        verbose_name='фамилия', max_length=constants.MAX_LAST_NAME_LENGTH)
     is_superuser = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
 
