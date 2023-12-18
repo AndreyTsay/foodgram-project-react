@@ -89,22 +89,19 @@ class RecipeViewSet(viewsets.ModelViewSet):
         permission_classes=(IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        ingredients_obj = (
-            IngredientRecipe.objects.filter(recipe__carts__user=request.user)
-            .values('ingredient__name', 'ingredient__measurement_unit')
-            .annotate(sum_amount=Sum('amount'))
-        )
-        data_dict = {}
-        ingredients_list = []
-        for item in ingredients_obj:
-            name = item['ingredient__name'].capitalize()
-            unit = item['ingredient__measurement_unit']
-            sum_amount = item['sum_amount']
-            data_dict[name] = [sum_amount, unit]
-        for ind, (key, value) in enumerate(data_dict.items(), 1):
-            if ind < 10:
-                ind = '0' + str(ind)
-            ingredients_list.append(
-                f'{ind}. {key} - ' f'{value[0]} ' f'{value[1]}'
-            )
-        return download_pdf(ingredients_list)
+        user = self.request.user
+        shopping_cart = ShoppingCart.objects.filter(user=user)
+        list = ['Список покупок:\n']
+        id = []
+        for recipe in shopping_cart:
+            id.append(recipe.recipe.id)
+        ingredients = IngredientRecipe.objects.filter(
+            recipe__in=id).values(
+            'ingredient__name', 'ingredient__measurement_unit').annotate(
+                ingredient__amount=Sum('amount'))
+        for ingredient in ingredients:
+            name = ingredient['ingredient__name']
+            amount = ingredient['ingredient__amount']
+            measurement_unit = ingredient['ingredient__measurement_unit']
+            list.append(f'{name} - {amount} {measurement_unit}\n')
+        return download_pdf(list)
