@@ -1,16 +1,16 @@
-# Kittygram social network 
-Dedicated to every kitty in the world
+# Foodgram social network 
+Recipes from all over the world
 
 ___
 
 ## INTRODUCTION
-A social network for furry and cute cats!
+A social network for sharing delicious recipes!
 
 ___
 
 ## PROJECT DESCRIPTION
 
-Welcome to Kittygram, a wonderful platform for all cat lovers! Get ready to create accounts, keep cat profiles in a live community of other cat lovers. Demonstrate the photogenic charm of your cat, share her most unusual achievements and celebrate birthdays in style. Study adorable feline profiles, and bask in the glory of all feline! Sign up today and embark on a journey through the charming world of our furry companions
+The Foodgram project allows users to share cooking recipes by posting them on a shared blog. The functionality for unauthorized users is limited to viewing all recipes and detailed information about each one. It can be expanded by registering a user on the site. The functionality for authorized users is much more extensive. In addition to the above, they can: create recipes, view the pages of recipe authors and subscribe to them, add recipes to the favorites list and to the shopping list with the ability to download the resulting list as a separate file.
 ___
 
 ## TECH
@@ -39,17 +39,17 @@ ___
 ##### Launching a project from images from Docker pub #####
 To start, you need to create a project folder, for example, kittygram, and go to it:
 
-mkdir kittygram_final
-cd kittygram_final
+mkdir foodgram
+cd foodgram
 In the project folder, download the docker-composer.production.yml file and run it:
 
 sudo docker compose -f docker-compose.production.yml up
 Images will be downloaded, containers will be created and enabled, volumes and networks will be created.```
 
-Clone the "Kittygram" repository and navigate to it
+Clone the "foodgram" repository and navigate to it
 
 ```
-git clone https://git@github.com:AndreyTsay/kittygram_final.git
+git clone git@github.com:AndreyTsay/foodgram-project-react.git
 ```
 
 Create the .env file and fill up according the .env.excample file
@@ -95,6 +95,6 @@ In the window where Ctrl+ was launchedWith or in another window:
 
 sudo docker compose -f docker-compose.yml down
 
-#### Author
+## Author
 
 **Created by Andrey Tsay, according to the methodological data of Yandex Practicum**
