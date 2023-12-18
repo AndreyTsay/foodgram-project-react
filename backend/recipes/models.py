@@ -119,12 +119,12 @@ class AbstractList(models.Model):
     """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
-        related_name="Пользователь",
+        related_name="%(class)s_user",
         on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        related_name="Рецепт",
+        related_name="%(class)s_recipe",
         on_delete=models.CASCADE
     )
 
