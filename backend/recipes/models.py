@@ -98,8 +98,10 @@ class IngredientRecipe(models.Model):
         verbose_name='Ингредиент',
     )
     amount = models.PositiveIntegerField(
-        default=0,
-        verbose_name='Количество ингредиента',
+        validators=(
+            MinValueValidator(
+                1, message='Минимальное количество ингридиентов 1'),),
+        verbose_name='Количество',
     )
 
     class Meta:
@@ -113,23 +115,33 @@ class IngredientRecipe(models.Model):
         )
 
 
-class Favorite(models.Model):
+class AbstractList(models.Model):
+    """Абстрактная модель для избранного и списка покупок."""
     user = models.ForeignKey(
         User,
-        on_delete=models.CASCADE,
-        related_name='favorites_user',
-        verbose_name='Пользователь',
+        related_name="Пользователь избранного рецепта",
+        on_delete=models.CASCADE
     )
     recipe = models.ForeignKey(
         Recipe,
-        on_delete=models.CASCADE,
-        related_name='favorites_recipe',
-        verbose_name='Рецепт',
+        related_name="Избранный рецепт",
+        on_delete=models.CASCADE
     )
+
+    class Meta:
+        abstract = True
+        ordering = ('user',)
+
+    def __str__(self):
+        return f'{self.user} - {self.recipe}'
+
+
+class Favorite(AbstractList):
 
     class Meta:
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
+        default_related_name = 'favorites'
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
@@ -137,27 +149,13 @@ class Favorite(models.Model):
             ),
         )
 
-    def __str__(self):
-        return f'{self.user} -> {self.recipe}'
 
-
-class ShoppingCart(models.Model):
-    user = models.ForeignKey(
-        User,
-        on_delete=models.CASCADE,
-        related_name='carts',
-        verbose_name='Пользователь',
-    )
-    recipe = models.ForeignKey(
-        Recipe,
-        on_delete=models.CASCADE,
-        related_name='carts',
-        verbose_name='Рецепт'
-    )
+class ShoppingCart(AbstractList):
 
     class Meta:
         verbose_name = 'Корзина'
         verbose_name_plural = 'Корзина'
+        default_related_name = 'carts'
         constraints = (
             models.UniqueConstraint(
                 fields=('user', 'recipe'),
