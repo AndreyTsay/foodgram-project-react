@@ -1,7 +1,7 @@
 version: '3.3'
 
 volumes:
-  db:
+  postgres_data:
   static:
   media:
 
@@ -11,7 +11,7 @@ services:
     image: postgres:13
     env_file: .env
     volumes:
-      - db:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
   
   backend:
     image: andreytsay/foodgram_backend
@@ -24,17 +24,18 @@ services:
 
   frontend:
     image: andreytsay/foodgram_frontend
+    command: cp -r /app/build/. /frontend_static/
     volumes:
-      - ../frontend/:/app/result_build/
+      - static:/frontend_static/
 
   nginx:
-    image: nginx:1.19.3
+    image: andreytsay/foodgram_nginx
     ports:
       - 9090:80
     volumes:
-      - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/staticfiles/ 
       - media:/media/ 
     depends_on:
       - frontend
+      - backend
