@@ -16,6 +16,12 @@ services:
   backend:
     image: andreytsay/foodgram_backend
     env_file: .env
+    command: >
+      bash -c "python manage.py makemigrations &&
+      python manage.py migrate &&
+      python manage.py collectstatic --noinput &&
+      python manage.py dataloader &&
+      gunicorn --bind 0:9090 backend.wsgi"
     volumes:
       - foodgram_static:/static/
       - foodgram_media:/app/media/
