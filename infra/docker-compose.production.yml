@@ -16,15 +16,9 @@ services:
   backend:
     image: andreytsay/foodgram_backend
     env_file: .env
-    command: >
-      bash -c "python manage.py makemigrations &&
-      python manage.py migrate &&
-      python manage.py collectstatic --noinput &&
-      python manage.py dataloader &&
-      gunicorn --bind 0:9090 backend.wsgi"
     volumes:
-      - foodgram_static:/app/static/
-      - foodgram_media:/app/media/
+      - static:/backend_static/
+      - media:/media/ 
     depends_on:
       - foodgram_db
 
@@ -40,8 +34,8 @@ services:
     volumes:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
-      - foodgram_static:/var/html/static/
-      - foodgram_media:/var/html/media/
+      - static:/staticfiles/ 
+      - media:/media/ 
     depends_on:
       - backend
       - frontend
