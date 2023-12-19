@@ -23,7 +23,7 @@ services:
       python manage.py dataloader &&
       gunicorn --bind 0:9090 backend.wsgi"
     volumes:
-      - foodgram_static:/static/
+      - foodgram_static:/app/static/
       - foodgram_media:/app/media/
     depends_on:
       - foodgram_db
