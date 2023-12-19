@@ -24,15 +24,15 @@ services:
 
   frontend:
     image: andreytsay/foodgram_frontend
-    command: cp -r /app/build/. /frontend_static/
     volumes:
-      - static:/frontend_static/
+      - ./frontend/:/app/result_build/
 
   nginx:
     image: andreytsay/foodgram_nginx
     ports:
       - 9090:80
     volumes:
+      - ./frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/staticfiles/ 
       - media:/media/ 
