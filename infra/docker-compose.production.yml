@@ -17,7 +17,7 @@ services:
     image: andreytsay/foodgram_backend
     env_file: .env
     volumes:
-      - foodgram_static:/app/static/
+      - foodgram_static:/static/
       - foodgram_media:/app/media/
     depends_on:
       - foodgram_db
