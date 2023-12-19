@@ -17,10 +17,8 @@ services:
       - '9090:80'
     volumes:
       - ../frontend/build:/usr/share/nginx/html/
-      - static:/backend_static/
-      - media:/media/
-    depends_on:
-      - frontend
+      - static:/staticfiles/ 
+      - media:/media/ 
   db:
     image: postgres:13.10
     env_file: .env
